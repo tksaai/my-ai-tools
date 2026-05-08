@@ -11,7 +11,7 @@
         .safe-pt { padding-top: env(safe-area-inset-top); }
     </style>
 </head>
-<body class="bg-slate-100 flex flex-col h-screen w-screen">
+<body class="bg-slate-100 flex flex-col h-[100dvh] w-screen overflow-hidden">
 
     <header class="bg-white border-b border-slate-200 shadow-sm safe-pt shrink-0 z-10 flex-none">
         <div class="h-14 flex items-center justify-between px-2">
@@ -34,7 +34,7 @@
         </div>
     </header>
 
-    <div class="flex-grow w-full h-full relative bg-white">
+    <div class="flex-1 w-full relative bg-white">
         <div id="loader" class="absolute inset-0 flex items-center justify-center bg-white z-0">
             <i class="fa-solid fa-circle-notch fa-spin text-3xl text-slate-300"></i>
         </div>
