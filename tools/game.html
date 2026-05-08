@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>10-in-1 Web Arcade</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    body { background-color: #0f172a; color: #f8fafc; touch-action: none; user-select: none; font-family: sans-serif; }
+    canvas { background-color: #000; image-rendering: pixelated; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5); }
+    /* スクロールバー非表示 */
+    ::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body class="flex flex-col items-center min-h-screen p-2 overflow-hidden">
+
+    <!-- メニュー画面 -->
+    <div id="menu" class="w-full max-w-3xl flex flex-col items-center py-4">
+        <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-6">10-in-1 WEB ARCADE</h1>
+        <div id="gameGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 w-full px-2">
+            <!-- JSで動的に生成 -->
+        </div>
+    </div>
+
+    <!-- ゲーム画面 -->
+    <div id="gameArea" class="hidden w-full max-w-[400px] flex flex-col items-center">
+        <div id="header" class="w-full flex justify-between items-end mb-2 px-1"></div>
+        <canvas id="c" width="400" height="400" class="w-full aspect-square rounded-lg border border-slate-700"></canvas>
+        <div id="controls" class="w-full mt-2 flex justify-center gap-2"></div>
+        <button onclick="app.toMenu()" class="mt-6 w-full py-3 bg-slate-800 hover:bg-slate-700 rounded-lg font-bold border border-slate-600 active:scale-95 transition">
+            ◀ メニューに戻る
+        </button>
+    </div>
+
+<script>
+// --- 共通システム・入力管理 ---
+const $ = id => document.getElementById(id);
+const c = $('c');
+const ctx = c.getContext('2d');
+let req, current;
+
+// ユーティリティ関数
+const r = (min, max) => Math.random() * (max - min) + min;
+const ri = (r1, r2) => !(r2.x > r1.x+r1.w || r2.x+r2.w < r1.x || r2.y > r1.y+r1.h || r2.y+r2.h < r1.y); // 矩形衝突判定
+const dist = (x1, y1, x2, y2) => Math.hypot(x1-x2, y1-y2);
+
+// 入力状態
+const keys = {};
+document.onkeydown = e => keys[e.code] = true;
+document.onkeyup = e => keys[e.code] = false;
+
+const touch = { x:-1, y:-1, isDown: false, justPressed: false, startX:-1, startY:-1 };
+const getPos = e => {
+    let rect = c.getBoundingClientRect();
+    let ev = e.touches ? e.touches[0] : e;
+    return { x: (ev.clientX - rect.left) * (400/rect.width), y: (ev.clientY - rect.top) * (400/rect.height) };
+};
+
+c.onmousedown = c.ontouchstart = e => {
+    if(e.touches) e.preventDefault();
+    let p = getPos(e);
+    touch.x = touch.startX = p.x; touch.y = touch.startY = p.y;
+    touch.isDown = touch.justPressed = true;
+};
+c.onmousemove = c.ontouchmove = e => {
+    if(e.touches) e.preventDefault();
+    if(!touch.isDown && !e.touches) return;
+    let p = getPos(e); touch.x = p.x; touch.y = p.y;
+};
+c.onmouseup = c.ontouchend = c.onmouseleave = () => touch.isDown = false;
+
+// --- ゲーム基底クラス ---
+// すべてのゲームはこのクラスを継承し、コードを極限まで短縮します。
+class Game {
+    constructor() { this.score = 0; this.over = false; this.time = 0; }
+    init() {}
+    setUI(desc, extra='') {
+        $('header').innerHTML = `<div class="text-xs text-slate-400 break-words w-2/3">${desc}</div><div class="font-mono text-lg text-green-400 bg-slate-800 px-2 rounded shadow-inner border border-slate-700">SCORE:<span id="sc">0</span></div>`;
+        $('controls').innerHTML = extra;
+    }
+    addScore(v) { this.score += v; $('sc').innerText = this.score; }
+    startLoop() { 
+        const l = t => {
+            if(this.over) { this.text('GAME OVER', 200, 200, 40, '#ef4444'); return; }
+            this.loop(t);
+            touch.justPressed = false; // フレーム終了時にフラグを落とす
+            req = requestAnimationFrame(l);
+        };
+        req = requestAnimationFrame(l);
+    }
+    // 描画ヘルパー群
+    cls(col='#0f172a') { ctx.fillStyle=col; ctx.fillRect(0,0,400,400); }
+    text(str, x, y, size=30, col='#fff') { ctx.fillStyle=col; ctx.font=`bold ${size}px sans-serif`; ctx.textAlign='center'; ctx.fillText(str,x,y); }
+    rect(x,y,w,h,col='#fff') { ctx.fillStyle=col; ctx.fillRect(x,y,w,h); }
+    circ(x,y,rad,col='#fff') { ctx.fillStyle=col; ctx.beginPath(); ctx.arc(x,y,rad,0,Math.PI*2); ctx.fill(); }
+}
+
+// ==========================================
+// 1. スネークゲーム
+// ==========================================
+class Snake extends Game {
+    init() {
+        this.setUI('PC: WASD/矢印 | スマホ: スワイプ');
+        this.s = [{x:10,y:10}]; this.dx=0; this.dy=-1;
+        this.f = {x:5,y:5};
+        this.startLoop();
+    }
+    loop(t) {
+        // スワイプ判定
+        if(touch.isDown && touch.justPressed) { this.sx=touch.x; this.sy=touch.y; }
+        if(touch.isDown && this.sx>=0) {
+            let dx=touch.x-this.sx, dy=touch.y-this.sy;
+            if(Math.abs(dx)>20 || Math.abs(dy)>20) {
+                if(Math.abs(dx)>Math.abs(dy)){ if(this.dx===0){this.dx=dx>0?1:-1; this.dy=0;} }
+                else { if(this.dy===0){this.dx=0; this.dy=dy>0?1:-1;} }
+                this.sx=-1;
+            }
+        }
+        // キー判定
+        if((keys['ArrowUp']||keys['KeyW'])&&this.dy===0){this.dx=0;this.dy=-1;}
+        if((keys['ArrowDown']||keys['KeyS'])&&this.dy===0){this.dx=0;this.dy=1;}
+        if((keys['ArrowLeft']||keys['KeyA'])&&this.dx===0){this.dx=-1;this.dy=0;}
+        if((keys['ArrowRight']||keys['KeyD'])&&this.dx===0){this.dx=1;this.dy=0;}
+
+        if(t - this.time < 100) return;
+        this.time = t;
+        
+        let h = {x:this.s[0].x+this.dx, y:this.s[0].y+this.dy};
+        if(h.x<0||h.x>=20||h.y<0||h.y>=20||this.s.some(p=>p.x===h.x&&p.y===h.y)) this.over=true;
+        else {
+            this.s.unshift(h);
+            if(h.x===this.f.x && h.y===this.f.y) {
+                this.addScore(10);
+                this.f = {x:Math.floor(r(0,20)), y:Math.floor(r(0,20))};
+            } else this.s.pop();
+        }
+        
+        this.cls();
+        this.rect(this.f.x*20+1, this.f.y*20+1, 18, 18, '#ef4444');
+        this.s.forEach((p,i)=>this.rect(p.x*20+1, p.y*20+1, 18, 18, i===0?'#4ade80':'#22c55e'));
+    }
+}
+
+// ==========================================
+// 2. ライフゲーム (Conway's Game of Life)
+// ==========================================
+class Life extends Game {
+    init() {
+        this.setUI('画面をなぞってセルを配置', '<button id="bS" class="px-4 py-2 bg-blue-600 rounded font-bold">Start/Stop</button> <button id="bC" class="px-4 py-2 bg-red-600 rounded font-bold">Clear</button>');
+        this.g = Array(40).fill(0).map(()=>Array(40).fill(0).map(()=>Math.random()>0.8?1:0));
+        this.run = false;
+        $('bS').onclick = ()=>this.run=!this.run;
+        $('bC').onclick = ()=>{this.g=Array(40).fill(0).map(()=>Array(40).fill(0)); this.run=false;};
+        this.startLoop();
+    }
+    loop(t) {
+        if(touch.isDown) {
+            let x = Math.floor(touch.x/10), y = Math.floor(touch.y/10);
+            if(x>=0&&x<40&&y>=0&&y<40) this.g[x][y] = 1;
+        }
+        if(this.run && t - this.time > 100) {
+            this.time = t;
+            let ng = Array(40).fill(0).map(()=>Array(40).fill(0));
+            for(let x=0;x<40;x++)for(let y=0;y<40;y++){
+                let c = 0;
+                for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){
+                    if(i===0&&j===0)continue;
+                    c+=this.g[(x+i+40)%40][(y+j+40)%40];
+                }
+                if(this.g[x][y]===1 && (c===2||c===3)) ng[x][y]=1;
+                else if(this.g[x][y]===0 && c===3) ng[x][y]=1;
+            }
+            this.g = ng;
+        }
+        this.cls('#000');
+        for(let x=0;x<40;x++)for(let y=0;y<40;y++) if(this.g[x][y]) this.rect(x*10+1,y*10+1,8,8,'#3b82f6');
+    }
+}
+
+// ==========================================
+// 3. インベーダー
+// ==========================================
+class Invaders extends Game {
+    init() {
+        this.setUI('画面左右タップで移動（自動射撃）');
+        this.p = {x:180, y:360, w:40, h:15};
+        this.b = []; this.eb = []; this.a = [];
+        for(let i=0;i<6;i++)for(let j=0;j<4;j++) this.a.push({x:30+i*45, y:30+j*35, w:25, h:15});
+        this.adir = 1; this.lastS = 0;
+        this.startLoop();
+    }
+    loop(t) {
+        if(this.a.length===0) { this.text('CLEAR!', 200, 200, 40, '#4ade80'); return; }
+        
+        // プレイヤー移動
+        if(touch.isDown) this.p.x += touch.x < 200 ? -4 : 4;
+        if(keys['ArrowLeft']) this.p.x -= 4;
+        if(keys['ArrowRight']) this.p.x += 4;
+        this.p.x = Math.max(0, Math.min(360, this.p.x));
+        
+        // 自動射撃
+        if(t - this.lastS > 400) { this.b.push({x:this.p.x+18, y:this.p.y, w:4, h:10}); this.lastS = t; }
+        
+        // エイリアン移動
+        let edge = false;
+        this.a.forEach(al => { al.x += this.adir; if(al.x<10 || al.x>365) edge=true; });
+        if(edge) { this.adir*=-1; this.a.forEach(al=>al.y+=15); }
+        if(Math.random()<0.03 && this.a.length>0) { // 敵の射撃
+            let r = this.a[Math.floor(Math.random()*this.a.length)];
+            this.eb.push({x:r.x+10, y:r.y+15, w:4, h:10});
+        }
+
+        // 弾の更新と衝突判定
+        this.b.forEach(b=>b.y-=6); this.eb.forEach(b=>b.y+=4);
+        this.b = this.b.filter(b=>b.y>-10); this.eb = this.eb.filter(b=>b.y<410);
+
+        this.b.forEach(b => {
+            let hit = this.a.findIndex(al => ri(b, al));
+            if(hit>=0) { this.a.splice(hit, 1); b.y=-100; this.addScore(10); }
+        });
+        if(this.eb.some(b => ri(b, this.p)) || this.a.some(al => ri(al, this.p))) this.over = true;
+
+        this.cls();
+        this.rect(this.p.x, this.p.y, this.p.w, this.p.h, '#4ade80'); // Player
+        this.b.forEach(b=>this.rect(b.x, b.y, b.w, b.h, '#fbbf24')); // Bullet
+        this.eb.forEach(b=>this.rect(b.x, b.y, b.w, b.h, '#ef4444')); // Enemy bullet
+        this.a.forEach(al=>this.rect(al.x, al.y, al.w, al.h, '#f8fafc')); // Alien
+    }
+}
+
+// ==========================================
+// 4. ピンボール (簡易物理エンジン)
+// ==========================================
+class Pinball extends Game {
+    init() {
+        this.setUI('左/右画面タップでフリッパー操作');
+        this.b = {x:200,y:50,vx:r(-2,2),vy:0,r:8}; // ボール
+        this.bmps = [{x:100,y:100},{x:300,y:100},{x:200,y:180}]; // バンパー
+        this.startLoop();
+    }
+    loop() {
+        this.b.vy += 0.25; // 重力
+        this.b.x += this.b.vx; this.b.y += this.b.vy;
+        
+        // 壁
+        if(this.b.x < 8) { this.b.x=8; this.b.vx*=-0.8; }
+        if(this.b.x > 392) { this.b.x=392; this.b.vx*=-0.8; }
+        if(this.b.y < 8) { this.b.y=8; this.b.vy*=-0.8; }
+        if(this.b.y > 400) this.over = true; // 落下
+        
+        // フリッパー（簡易的な斜めの跳ね上げ領域として実装）
+        let lUp = keys['ArrowLeft'] || (touch.isDown && touch.x<200);
+        let rUp = keys['ArrowRight'] || (touch.isDown && touch.x>=200);
+        let inL = this.b.x < 180 && this.b.y > 340 && this.b.y < 380;
+        let inR = this.b.x > 220 && this.b.y > 340 && this.b.y < 380;
+        
+        if(inL && lUp && this.b.vy > 0) { this.b.vy = -12; this.b.vx = Math.abs(this.b.vx)*0.5 + 3; }
+        else if(inL && this.b.vy > 0) { this.b.vx += 1.5; this.b.vy *= -0.4; } // ただの坂
+        if(inR && rUp && this.b.vy > 0) { this.b.vy = -12; this.b.vx = -Math.abs(this.b.vx)*0.5 - 3; }
+        else if(inR && this.b.vy > 0) { this.b.vx -= 1.5; this.b.vy *= -0.4; }
+        
+        // バンパー衝突
+        this.bmps.forEach(p => {
+            let d = dist(this.b.x, this.b.y, p.x, p.y);
+            if(d < this.b.r + 20) {
+                let nx = (this.b.x - p.x)/d, ny = (this.b.y - p.y)/d;
+                this.b.vx = nx * 9; this.b.vy = ny * 9;
+                this.addScore(50);
+            }
+        });
+
+        this.cls('#1e1b4b');
+        this.bmps.forEach(p=>{ this.circ(p.x,p.y,20,'#ec4899'); this.circ(p.x,p.y,12,'#fbcfe8'); }); // バンパー
+        
+        // フリッパー描画
+        ctx.fillStyle='#3b82f6';
+        ctx.save(); ctx.translate(100, 370); ctx.rotate(lUp?-0.4:0.4); ctx.fillRect(0,-10,90,20); ctx.restore();
+        ctx.save(); ctx.translate(300, 370); ctx.rotate(rUp?0.4:-0.4); ctx.fillRect(-90,-10,90,20); ctx.restore();
+        
+        this.circ(this.b.x, this.b.y, this.b.r, '#e2e8f0'); // ボール
+    }
+}
+
+// ==========================================
+// 5. ブロック崩し (Breakout)
+// ==========================================
+class Breakout extends Game {
+    init() {
+        this.setUI('画面タッチでパドルが指に追従');
+        this.p = {x:160, y:370, w:80, h:10};
+        this.b = {x:200, y:300, vx:4, vy:-4, w:8, h:8};
+        this.blks = [];
+        for(let i=0;i<8;i++)for(let j=0;j<5;j++) this.blks.push({x:10+i*48, y:20+j*20, w:44, h:15});
+        this.startLoop();
+    }
+    loop() {
+        if(this.blks.length===0) { this.text('CLEAR!', 200, 200, 40, '#4ade80'); return; }
+        
+        if(touch.isDown) this.p.x = touch.x - this.p.w/2;
+        if(keys['ArrowLeft']) this.p.x -= 6;
+        if(keys['ArrowRight']) this.p.x += 6;
+        this.p.x = Math.max(0, Math.min(400-this.p.w, this.p.x));
+
+        this.b.x += this.b.vx; this.b.y += this.b.vy;
+        if(this.b.x<0 || this.b.x>392) this.b.vx *= -1;
+        if(this.b.y<0) this.b.vy *= -1;
+        if(this.b.y>400) this.over = true;
+
+        if(ri(this.b, this.p)) { this.b.vy = -Math.abs(this.b.vy); this.b.vx += (this.b.x - (this.p.x+this.p.w/2))*0.1; }
+
+        let hit = this.blks.findIndex(blk => ri(this.b, blk));
+        if(hit>=0) {
+            this.b.vy *= -1; this.blks.splice(hit, 1); this.addScore(10);
+            this.b.vx *= 1.02; this.b.vy *= 1.02; // 徐々に加速
+        }
+
+        this.cls();
+        this.blks.forEach((blk,i)=>this.rect(blk.x, blk.y, blk.w, blk.h, `hsl(${i*15}, 70%, 50%)`));
+        this.rect(this.p.x, this.p.y, this.p.w, this.p.h, '#38bdf8');
+        this.rect(this.b.x, this.b.y, this.b.w, this.b.h, '#fff');
+    }
+}
+
+// ==========================================
+// 6. ポン (Pong - CPU対戦)
+// ==========================================
+class Pong extends Game {
+    init() {
+        this.setUI('タッチ・ドラッグで右パドルを上下に操作');
+        this.p1 = {x:10,y:170,w:10,h:60}; // CPU
+        this.p2 = {x:380,y:170,w:10,h:60}; // Player
+        this.b = {x:200,y:200,vx:-5,vy:3,w:10,h:10};
+        this.startLoop();
+    }
+    loop() {
+        if(touch.isDown) this.p2.y = touch.y - this.p2.h/2;
+        if(keys['ArrowUp']) this.p2.y -= 6;
+        if(keys['ArrowDown']) this.p2.y += 6;
+        
+        this.p1.y += (this.b.y - (this.p1.y+this.p1.h/2)) * 0.09; // CPU AI
+        
+        this.p1.y = Math.max(0, Math.min(340, this.p1.y));
+        this.p2.y = Math.max(0, Math.min(340, this.p2.y));
+
+        this.b.x += this.b.vx; this.b.y += this.b.vy;
+        if(this.b.y<0 || this.b.y>390) this.b.vy *= -1;
+        
+        if(ri(this.b, this.p1)) { this.b.vx = Math.abs(this.b.vx)+0.3; this.b.x=25; }
+        if(ri(this.b, this.p2)) { this.b.vx = -Math.abs(this.b.vx)-0.3; this.b.x=365; this.addScore(10); }
+
+        if(this.b.x < -10) { this.b={x:200,y:200,vx:5,vy:3,w:10,h:10}; this.score=0; $('sc').innerText='0'; } // CPU win (reset score)
+        if(this.b.x > 410) { this.b={x:200,y:200,vx:-5,vy:3,w:10,h:10}; } // Player win
+
+        this.cls();
+        this.rect(this.p1.x, this.p1.y, this.p1.w, this.p1.h, '#94a3b8'); // CPU
+        this.rect(this.p2.x, this.p2.y, this.p2.w, this.p2.h, '#4ade80'); // Player
+        this.rect(this.b.x, this.b.y, this.b.w, this.b.h, '#fff'); // Ball
+        // センターライン
+        for(let i=0; i<400; i+=20) this.rect(198, i, 4, 10, '#334155');
+    }
+}
+
+// ==========================================
+// 7. フラッピー風 (Flappy)
+// ==========================================
+class Flappy extends Game {
+    init() {
+        this.setUI('画面タップでジャンプ。土管を避けろ');
+        this.b = {x:80, y:200, vy:0, w:20, h:20};
+        this.pipes = [];
+        this.frames = 0;
+        this.startLoop();
+    }
+    loop() {
+        this.b.vy += 0.4; // 重力
+        this.b.y += this.b.vy;
+        
+        if(touch.justPressed || keys['Space']) this.b.vy = -6; // ジャンプ
+
+        if(this.frames % 100 === 0) {
+            let gapY = r(50, 250);
+            this.pipes.push({x:400, y:0, w:40, h:gapY, passed:false}); // 上土管
+            this.pipes.push({x:400, y:gapY+120, w:40, h:400, passed:false}); // 下土管
+        }
+        
+        this.pipes.forEach(p => {
+            p.x -= 3;
+            if(!p.passed && p.x < this.b.x) { p.passed=true; this.addScore(5); } // スコアは上下で+10になる
+        });
+        this.pipes = this.pipes.filter(p => p.x > -50);
+
+        if(this.b.y < 0 || this.b.y > 380 || this.pipes.some(p => ri(this.b, p))) this.over = true;
+
+        this.cls('#38bdf8'); // 空色
+        this.rect(this.b.x, this.b.y, this.b.w, this.b.h, '#facc15'); // 鳥
+        this.pipes.forEach(p => this.rect(p.x, p.y, p.w, p.h, '#22c55e')); // 土管
+        this.frames++;
+    }
+}
+
+// ==========================================
+// 8. フルーツキャッチ (Catch)
+// ==========================================
+class Catch extends Game {
+    init() {
+        this.setUI('ドラッグでカゴを移動。果物を拾え');
+        this.p = {x:160, y:360, w:80, h:20};
+        this.items = [];
+        this.speed = 3;
+        this.startLoop();
+    }
+    loop() {
+        if(touch.isDown) this.p.x = touch.x - this.p.w/2;
+        if(keys['ArrowLeft']) this.p.x -= 6;
+        if(keys['ArrowRight']) this.p.x += 6;
+        this.p.x = Math.max(0, Math.min(400-this.p.w, this.p.x));
+
+        if(Math.random() < 0.03) this.items.push({x:r(10,390), y:-20, r:10, type: Math.random()>0.2?1:0}); // 1:リンゴ, 0:爆弾
+
+        for(let i=this.items.length-1; i>=0; i--) {
+            let it = this.items[i];
+            it.y += this.speed;
+            let itRect = {x:it.x-it.r, y:it.y-it.r, w:it.r*2, h:it.r*2};
+            
+            if(ri(itRect, this.p)) {
+                if(it.type === 1) { this.addScore(10); this.speed+=0.05; }
+                else this.over = true; // 爆弾
+                this.items.splice(i, 1);
+            } else if(it.y > 420) {
+                if(it.type === 1) this.over = true; // リンゴ落としたらアウト
+                this.items.splice(i, 1);
+            }
+        }
+
+        this.cls();
+        this.rect(this.p.x, this.p.y, this.p.w, this.p.h, '#d1d5db'); // カゴ
+        this.items.forEach(it => this.circ(it.x, it.y, it.r, it.type===1?'#ef4444':'#475569'));
+    }
+}
+
+// ==========================================
+// 9. 障害物避け (Dodge)
+// ==========================================
+class Dodge extends Game {
+    init() {
+        this.setUI('指/マウスで自機を操作。隕石を避けろ');
+        this.p = {x:180, y:350, w:20, h:20};
+        this.rocks = [];
+        this.frames = 0;
+        this.startLoop();
+    }
+    loop() {
+        // 自機はタッチ位置に完全追従
+        if(touch.isDown) { this.p.x = touch.x - 10; this.p.y = touch.y - 10; }
+        if(keys['ArrowLeft']) this.p.x -= 6; if(keys['ArrowRight']) this.p.x += 6;
+        if(keys['ArrowUp']) this.p.y -= 6; if(keys['ArrowDown']) this.p.y += 6;
+        this.p.x = Math.max(0, Math.min(380, this.p.x));
+        this.p.y = Math.max(0, Math.min(380, this.p.y));
+
+        if(this.frames % Math.max(5, 20 - Math.floor(this.frames/100)) === 0) {
+            this.rocks.push({x:r(0,380), y:-30, w:r(15,40), h:r(15,40), vy:r(3,7)});
+        }
+
+        this.rocks.forEach(rk => rk.y += rk.vy);
+        this.rocks = this.rocks.filter(rk => rk.y < 420);
+
+        if(this.rocks.some(rk => ri(this.p, rk))) this.over = true;
+        if(this.frames % 10 === 0) this.addScore(1); // 生存スコア
+
+        this.cls('#0f172a');
+        this.rect(this.p.x, this.p.y, this.p.w, this.p.h, '#38bdf8');
+        this.rocks.forEach(rk => this.rect(rk.x, rk.y, rk.w, rk.h, '#64748b'));
+        this.frames++;
+    }
+}
+
+// ==========================================
+// 10. エイム練習 (Aim)
+// ==========================================
+class Aim extends Game {
+    init() {
+        this.setUI('現れる的をタップして消せ！');
+        this.tgs = [];
+        this.startLoop();
+    }
+    loop(t) {
+        if(t - this.time > Math.max(400, 1000 - this.score*5)) { // スコアで出現頻度UP
+            this.tgs.push({x:r(40,360), y:r(40,360), r:35});
+            this.time = t;
+        }
+        
+        if(touch.justPressed) {
+            let hit = this.tgs.findIndex(tg => dist(tg.x, tg.y, touch.x, touch.y) < tg.r);
+            if(hit>=0) { this.tgs.splice(hit, 1); this.addScore(10); }
+            else this.addScore(-5); // ミスは減点
+        }
+        
+        this.cls();
+        for(let i=this.tgs.length-1; i>=0; i--) {
+            let tg = this.tgs[i];
+            tg.r -= 0.3; // 的が縮む
+            if(tg.r <= 0) { this.over=true; break; }
+            this.circ(tg.x, tg.y, tg.r, '#ef4444');
+            this.circ(tg.x, tg.y, tg.r*0.6, '#fff');
+            this.circ(tg.x, tg.y, tg.r*0.2, '#ef4444');
+        }
+    }
+}
+
+// ==========================================
+// アプリケーション管理
+// ==========================================
+const app = {
+    games: [
+        {id: 'snake', name: 'Snake', icon: '🐍'},
+        {id: 'life', name: 'Life Game', icon: '🧬'},
+        {id: 'invaders', name: 'Invaders', icon: '👾'},
+        {id: 'pinball', name: 'Pinball', icon: '🔴'},
+        {id: 'breakout', name: 'Breakout', icon: '🧱'},
+        {id: 'pong', name: 'Pong', icon: '🏓'},
+        {id: 'flappy', name: 'Flappy', icon: '🐦'},
+        {id: 'catch', name: 'Catch', icon: '🍎'},
+        {id: 'dodge', name: 'Dodge', icon: '☄️'},
+        {id: 'aim', name: 'Aim Drill', icon: '🎯'}
+    ],
+    init() {
+        let html = '';
+        this.games.forEach(g => {
+            html += `<button onclick="app.start('${g.id}')" class="flex flex-col items-center justify-center p-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition transform hover:scale-105 active:scale-95 shadow-lg">
+                <div class="text-4xl mb-2">${g.icon}</div>
+                <div class="font-bold text-sm text-slate-200">${g.name}</div>
+            </button>`;
+        });
+        $('gameGrid').innerHTML = html;
+    },
+    start(id) {
+        $('menu').classList.add('hidden');
+        $('gameArea').classList.remove('hidden');
+        if(req) cancelAnimationFrame(req);
+        for(let k in keys) keys[k]=false; // キーリセット
+        touch.isDown = false;
+        
+        switch(id) {
+            case 'snake': current = new Snake(); break;
+            case 'life': current = new Life(); break;
+            case 'invaders': current = new Invaders(); break;
+            case 'pinball': current = new Pinball(); break;
+            case 'breakout': current = new Breakout(); break;
+            case 'pong': current = new Pong(); break;
+            case 'flappy': current = new Flappy(); break;
+            case 'catch': current = new Catch(); break;
+            case 'dodge': current = new Dodge(); break;
+            case 'aim': current = new Aim(); break;
+        }
+        if(current) current.init();
+    },
+    toMenu() {
+        if(req) cancelAnimationFrame(req);
+        current = null;
+        $('gameArea').classList.add('hidden');
+        $('menu').classList.remove('hidden');
+    }
+};
+
+// 起動
+app.init();
+</script>
+</body>
+</html>
