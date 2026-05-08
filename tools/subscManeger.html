@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Subsc Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h1 class="text-2xl font-bold text-slate-800 mb-4">サブスク管理</h1>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-blue-50 p-4 rounded-xl">
+                    <p class="text-sm text-blue-600 font-semibold">月間合計</p>
+                    <p class="text-2xl font-bold text-blue-800">¥<span id="monthly-total">0</span></p>
+                </div>
+                <div class="bg-indigo-50 p-4 rounded-xl">
+                    <p class="text-sm text-indigo-600 font-semibold">年間合計</p>
+                    <p class="text-2xl font-bold text-indigo-800">¥<span id="yearly-total">0</span></p>
+                </div>
+            </div>
+        </header>
+
+        <section class="mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <form id="sub-form" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <input type="text" id="name" placeholder="サービス名" class="border p-2 rounded-lg w-full" required>
+                    <input type="number" id="price" placeholder="料金" class="border p-2 rounded-lg w-full" required>
+                    <select id="cycle" class="border p-2 rounded-lg w-full">
+                        <option value="monthly">月払い</option>
+                        <option value="yearly">年払い</option>
+                    </select>
+                    <input type="date" id="next_date" class="border p-2 rounded-lg w-full">
+                </div>
+                <button type="submit" class="w-full bg-slate-800 text-white py-2 rounded-lg font-bold hover:bg-slate-700 transition">追加する</button>
+            </form>
+        </section>
+
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="flex justify-between items-center p-6 border-b">
+                <h2 class="font-bold text-slate-800">登録済みサブスク</h2>
+                <button onclick="exportCSV()" class="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-500">CSV書き出し</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50 text-slate-500 text-sm">
+                        <tr>
+                            <th class="p-4">サービス名</th>
+                            <th class="p-4">料金</th>
+                            <th class="p-4">サイクル</th>
+                            <th class="p-4">次回支払</th>
+                            <th class="p-4">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sub-list">
+                        </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        let subscriptions = JSON.parse(localStorage.getItem('my_subs')) || [];
+
+        const subForm = document.getElementById('sub-form');
+        const subList = document.getElementById('sub-list');
+
+        // 保存・更新
+        function save() {
+            localStorage.setItem('my_subs', JSON.stringify(subscriptions));
+            render();
+        }
+
+        // 追加
+        subForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newSub = {
+                id: Date.now(),
+                name: document.getElementById('name').value,
+                price: Number(document.getElementById('price').value),
+                cycle: document.getElementById('cycle').value,
+                next_date: document.getElementById('next_date').value
+            };
+            subscriptions.push(newSub);
+            subForm.reset();
+            save();
+        });
+
+        // 削除
+        function deleteSub(id) {
+            subscriptions = subscriptions.filter(s => s.id !== id);
+            save();
+        }
+
+        // CSV出力
+        function exportCSV() {
+            if (subscriptions.length === 0) return alert('データがありません');
+            
+            let csvContent = "data:text/csv;charset=utf-8,ID,サービス名,料金,サイクル,次回支払日\n";
+            subscriptions.forEach(s => {
+                csvContent += `${s.id},${s.name},${s.price},${s.cycle === 'monthly' ? '月次' : '年次'},${s.next_date}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "my_subscriptions.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 表示の更新
+        function render() {
+            subList.innerHTML = '';
+            let monthlySum = 0;
+            let yearlySum = 0;
+
+            subscriptions.forEach(s => {
+                const row = document.createElement('tr');
+                row.className = "border-b hover:bg-slate-50 text-slate-700";
+                row.innerHTML = `
+                    <td class="p-4 font-semibold">${s.name}</td>
+                    <td class="p-4">¥${s.price.toLocaleString()}</td>
+                    <td class="p-4">${s.cycle === 'monthly' ? '<span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">月次</span>' : '<span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded-full">年次</span>'}</td>
+                    <td class="p-4 text-sm text-slate-500">${s.next_date || '-'}</td>
+                    <td class="p-4"><button onclick="deleteSub(${s.id})" class="text-red-500 hover:text-red-700 text-sm">削除</button></td>
+                `;
+                subList.appendChild(row);
+
+                // 金額計算
+                if (s.cycle === 'monthly') {
+                    monthlySum += s.price;
+                    yearlySum += s.price * 12;
+                } else {
+                    monthlySum += Math.floor(s.price / 12);
+                    yearlySum += s.price;
+                }
+            });
+
+            document.getElementById('monthly-total').innerText = monthlySum.toLocaleString();
+            document.getElementById('yearly-total').innerText = yearlySum.toLocaleString();
+        }
+
+        // 初期表示
+        render();
+    </script>
+</body>
+</html>
