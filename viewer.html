@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tool Viewer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { overflow: hidden; }
+        .safe-pt { padding-top: env(safe-area-inset-top); }
+    </style>
+</head>
+<body class="bg-slate-100 flex flex-col h-screen w-screen">
+
+    <header class="bg-white border-b border-slate-200 shadow-sm safe-pt shrink-0 z-10 flex-none">
+        <div class="h-14 flex items-center justify-between px-2">
+            <a href="index.html" class="flex items-center text-blue-600 hover:text-blue-800 px-2 py-2 rounded-lg transition active:bg-blue-50 w-24">
+                <i class="fa-solid fa-chevron-left text-lg mr-1.5"></i>
+                <span class="font-bold text-sm">ポータル</span>
+            </a>
+            
+            <h1 id="tool-title" class="font-bold text-slate-800 text-base truncate flex-grow text-center px-2">
+                読み込み中...
+            </h1>
+            
+            <div class="w-24 flex justify-end">
+                <button onclick="reloadTool()" class="text-slate-400 hover:text-slate-600 p-2 rounded-full" title="再読み込み">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex-grow w-full h-full relative bg-white">
+        <div id="loader" class="absolute inset-0 flex items-center justify-center bg-white z-0">
+            <i class="fa-solid fa-circle-notch fa-spin text-3xl text-slate-300"></i>
+        </div>
+        <iframe id="tool-frame" class="absolute inset-0 w-full h-full border-0 z-10 bg-transparent" onload="hideLoader()"></iframe>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const fileName = params.get('file');
+        const toolName = params.get('name');
+
+        if (fileName) {
+            if (toolName) {
+                document.getElementById('tool-title').textContent = toolName;
+                document.title = toolName;
+            }
+            document.getElementById('tool-frame').src = `tools/${fileName}`;
+        } else {
+            document.getElementById('tool-title').textContent = 'エラー';
+            document.getElementById('tool-frame').srcdoc = `
+                <div style="font-family:sans-serif; text-align:center; padding:50px; color:#64748b;">
+                    <h2>ツールが見つかりません</h2><p>URLが正しくありません。</p>
+                </div>
+            `;
+            hideLoader();
+        }
+
+        function hideLoader() { document.getElementById('loader').style.display = 'none'; }
+        function reloadTool() {
+            document.getElementById('loader').style.display = 'flex';
+            document.getElementById('tool-frame').contentWindow.location.reload();
+        }
+    </script>
+</body>
+</html>

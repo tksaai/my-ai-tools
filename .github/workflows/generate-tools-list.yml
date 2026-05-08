@@ -1,0 +1,90 @@
+name: Generate Tools List
+
+# --- 起動条件 ---
+on:
+  push:
+    paths:
+      - 'tools/*.html' # toolsフォルダ内のHTMLが更新されたら自動起動！
+  workflow_dispatch:   # GitHubの画面から手動で起動できるボタンも用意
+
+# GitHub Pagesに書き込むための権限設定
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: リポジトリのコードを取得
+        uses: actions/checkout@v4
+
+      - name: Pythonの準備
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Beautiful Soup (HTML解析ライブラリ) のインストール
+        run: pip install beautifulsoup4
+
+      - name: ツールリスト(tools.json)を自動生成するPythonスクリプトの実行
+        run: |
+          python -c '
+          import os
+          import json
+          from bs4 import BeautifulSoup
+
+          tools_dir = "tools"
+          output_file = "tools.json"
+          tools_data = {}
+
+          # toolsフォルダが存在するか確認
+          if os.path.exists(tools_dir):
+              # フォルダ内のすべてのHTMLファイルをチェック
+              for filename in os.listdir(tools_dir):
+                  if filename.endswith(".html"):
+                      filepath = os.path.join(tools_dir, filename)
+                      
+                      try:
+                          with open(filepath, "r", encoding="utf-8") as f:
+                              soup = BeautifulSoup(f.read(), "html.parser")
+                              
+                              # 1. タイトルの取得
+                              title_tag = soup.find("title")
+                              name = title_tag.text.strip() if title_tag else filename.replace(".html", "")
+                              
+                              # 2. メタデータの取得 (icon, description, category)
+                              icon_meta = soup.find("meta", attrs={"name": "icon"})
+                              icon = icon_meta["content"] if icon_meta else "📱"
+                              
+                              desc_meta = soup.find("meta", attrs={"name": "description"})
+                              description = desc_meta["content"] if desc_meta else "生成AIで作成したツールです。"
+                              
+                              cat_meta = soup.find("meta", attrs={"name": "category"})
+                              category = cat_meta["content"] if cat_meta else "アプリ"
+                              
+                              # データを保存
+                              tools_data[filename] = {
+                                  "name": name,
+                                  "icon": icon,
+                                  "description": description,
+                                  "category": category
+                              }
+                      except Exception as e:
+                          print(f"Error reading {filename}: {e}")
+
+          # JSONファイルとして出力
+          with open(output_file, "w", encoding="utf-8") as f:
+              json.dump(tools_data, f, ensure_ascii=False, indent=2)
+          print(f"Generated {output_file} successfully.")
+          '
+
+      - name: 生成したリストをGitHubに保存（コミット＆プッシュ）
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # tools.json に変更があった場合のみコミットする
+          git add tools.json
+          git diff --staged --quiet || git commit -m "Auto-update tools.json [skip ci]"
+          git push

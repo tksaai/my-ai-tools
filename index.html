@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="manifest" href="manifest.json">
+    <title>My AI Tools Portal</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .star-active { color: #eab308; }
+        .star-inactive { color: #cbd5e1; }
+        .card-view-item { transition: transform 0.2s, box-shadow 0.2s; }
+        .card-view-item:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .ios-icon-item { transition: transform 0.2s; }
+        .ios-icon-item:active { transform: scale(0.9); }
+        .ios-icon-bg { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
+        .modal-backdrop { backdrop-filter: blur(4px); }
+        #cropper-image-container { max-height: 60vh; }
+        img { display: block; max-width: 100%; }
+        #sync-loader { display: none; }
+        .safe-pt { padding-top: env(safe-area-inset-top); }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col transition-colors duration-300">
+
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm safe-pt">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center justify-between w-full sm:w-auto">
+                <h1 class="text-xl font-extrabold text-slate-800 flex items-center">
+                    <span class="bg-blue-600 text-white rounded-lg p-1.5 mr-2 text-sm"><i class="fa-solid fa-robot"></i></span>
+                    My AI Tools
+                </h1>
+                <div class="flex items-center space-x-2 sm:hidden">
+                    <button onclick="toggleViewMode()" class="text-slate-500 p-2 rounded-full hover:bg-slate-100" id="view-toggle-mobile"><i class="fa-solid fa-border-all text-lg"></i></button>
+                    <button onclick="openSyncModal()" class="text-slate-500 p-2 rounded-full hover:bg-slate-100"><i class="fa-solid fa-cloud-arrow-up text-lg"></i></button>
+                    <a href="upload.html" class="text-blue-600 p-2 rounded-full hover:bg-blue-50"><i class="fa-solid fa-plus text-lg"></i></a>
+                </div>
+            </div>
+            
+            <div class="flex items-center w-full sm:w-auto gap-3">
+                <div class="relative w-full sm:w-64">
+                    <input type="text" id="search-input" placeholder="ツールを検索..." class="w-full pl-10 pr-4 py-2 bg-slate-100 border-transparent rounded-xl text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                </div>
+                <div class="hidden sm:flex items-center space-x-1">
+                    <button onclick="toggleViewMode()" class="text-slate-500 hover:text-blue-600 p-2 rounded-lg hover:bg-slate-50 transition" id="view-toggle-pc" title="表示切り替え"><i class="fa-solid fa-border-all text-xl"></i></button>
+                    <button onclick="openSyncModal()" class="text-slate-500 hover:text-blue-600 p-2 rounded-lg hover:bg-slate-50 transition" title="クラウド同期設定"><i class="fa-solid fa-cloud-arrow-up text-xl"></i></button>
+                    <a href="upload.html" class="text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg font-medium flex items-center transition ml-2"><i class="fa-solid fa-plus mr-1.5"></i> 追加</a>
+                </div>
+            </div>
+        </div>
+        <div class="max-w-6xl mx-auto px-4 pb-2 overflow-x-auto whitespace-nowrap hide-scrollbar mt-2">
+            <div id="category-filters" class="flex space-x-2 py-1"></div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-6xl mx-auto px-4 py-6 w-full relative">
+        <div id="loading" class="text-center py-20"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i></div>
+        <div id="error-message" class="hidden bg-red-50 text-red-600 p-4 rounded-lg text-center max-w-lg mx-auto border border-red-100 shadow-sm mt-10">
+            データの読み込みに失敗しました。
+        </div>
+        <div id="tools-container" class="hidden"></div>
+        <div id="no-results" class="hidden text-center py-20"><p class="text-slate-500">ツールが見つかりません。</p></div>
+    </main>
+
+    <!-- 編集モーダル -->
+    <div id="edit-modal" class="fixed inset-0 bg-slate-900 bg-opacity-50 z-50 hidden flex items-center justify-center modal-backdrop p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="bg-blue-600 px-6 py-4 flex justify-between items-center text-white">
+                <h2 class="font-bold text-lg"><i class="fa-solid fa-pen-to-square mr-2"></i>ツールの編集</h2>
+                <button onclick="closeEditModal()" class="text-white hover:text-blue-200"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-5">
+                <input type="hidden" id="edit-filename">
+                <div class="flex items-center space-x-4">
+                    <div id="edit-icon-preview" class="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-md border border-gray-200 bg-gradient-to-br from-blue-400 to-blue-600 text-white overflow-hidden shrink-0">📱</div>
+                    <div class="flex-grow space-y-2">
+                        <label class="block text-sm font-bold text-slate-700">アイコンを設定</label>
+                        <div class="flex space-x-2">
+                            <input type="text" id="edit-icon-text" placeholder="絵文字" class="w-16 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center" oninput="updatePreviewFromText()">
+                            <button onclick="document.getElementById('icon-file-input').click()" class="flex-grow bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-sm font-medium transition border border-slate-300 flex justify-center items-center"><i class="fa-regular fa-image mr-1.5"></i> 画像</button>
+                            <input type="file" id="icon-file-input" accept="image/*" class="hidden" onchange="handleImageSelect(event)">
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" id="edit-icon-hidden">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">ツール名</label>
+                    <input type="text" id="edit-name" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">カテゴリ</label>
+                    <input type="text" id="edit-category" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="pt-4 flex space-x-3">
+                    <button onclick="resetEdit()" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg font-medium hover:bg-slate-200 transition">初期化</button>
+                    <button onclick="saveEdit()" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition">変更を適用</button>
+                </div>
+                <p class="text-xs text-slate-500 text-center mt-2">※適用後は右上のクラウドアイコンからGitHubへ保存してください</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 画像切り抜きモーダル -->
+    <div id="cropper-modal" class="fixed inset-0 bg-black bg-opacity-90 z-[60] hidden flex flex-col items-center justify-center p-4">
+        <div class="w-full max-w-lg bg-slate-800 rounded-2xl overflow-hidden flex flex-col shadow-2xl">
+            <div class="px-4 py-3 flex justify-between items-center text-white border-b border-slate-700">
+                <h3 class="font-bold">画像を切り抜く</h3>
+                <button onclick="closeCropperModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div id="cropper-image-container" class="w-full bg-slate-900 p-2 flex items-center justify-center"><img id="cropper-image" src="" alt="切り抜き"></div>
+            <div class="p-4 flex justify-between space-x-3 bg-slate-800">
+                <button onclick="closeCropperModal()" class="flex-1 py-2 rounded-lg font-medium text-slate-300 bg-slate-700 hover:bg-slate-600">キャンセル</button>
+                <button onclick="applyCrop()" class="flex-1 py-2 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-500"><i class="fa-solid fa-crop-simple mr-1"></i> 決定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- クラウド同期モーダル -->
+    <div id="sync-modal" class="fixed inset-0 bg-slate-900 bg-opacity-50 z-50 hidden flex items-center justify-center modal-backdrop p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="bg-slate-800 px-6 py-4 flex justify-between items-center text-white">
+                <h2 class="font-bold text-lg"><i class="fa-solid fa-cloud-arrow-up mr-2"></i>クラウド同期 (GitHub)</h2>
+                <button onclick="closeSyncModal()" class="text-white hover:text-slate-300"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-slate-600">画面上で編集した「名前」や「アイコン画像」をGitHubに直接保存し、他の端末と同期します。</p>
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">GitHub ユーザー名</label>
+                        <input type="text" id="sync-owner" class="w-full px-2 py-1.5 border rounded text-sm bg-white" placeholder="your-username">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">リポジトリ名</label>
+                        <input type="text" id="sync-repo" class="w-full px-2 py-1.5 border rounded text-sm bg-white" placeholder="my-ai-tools">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">トークン (PAT)</label>
+                        <input type="password" id="sync-token" class="w-full px-2 py-1.5 border rounded text-sm bg-white" placeholder="ghp_...">
+                    </div>
+                </div>
+                <button onclick="syncToGitHub()" id="btn-sync" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow-md flex justify-center items-center">
+                    <span id="sync-btn-text">編集内容をGitHubに保存する</span>
+                    <i id="sync-loader" class="fa-solid fa-spinner fa-spin ml-2"></i>
+                </button>
+                <div id="sync-msg" class="text-sm text-center font-bold hidden p-2 rounded"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let rawTools = []; let allTools = []; 
+        let favorites = JSON.parse(localStorage.getItem('ai_tools_favorites') || '[]');
+        let localOverrides = JSON.parse(localStorage.getItem('ai_tools_overrides') || '{}');
+        let cloudOverrides = {}; 
+        let currentCategory = 'all'; let searchQuery = '';
+        let viewMode = localStorage.getItem('ai_tools_viewmode') || 'ios';
+        let cropper = null;
+
+        const colorGradients = [
+            'from-blue-400 to-blue-600', 'from-green-400 to-green-600', 'from-purple-400 to-purple-600',
+            'from-orange-400 to-orange-500', 'from-pink-400 to-pink-600', 'from-teal-400 to-teal-600',
+            'from-indigo-400 to-indigo-600', 'from-red-400 to-red-600'
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateToggleIcon(); loadSyncSettings(); fetchData();
+            document.getElementById('search-input').addEventListener('input', (e) => { searchQuery = e.target.value.toLowerCase(); renderTools(); });
+        });
+
+        function loadSyncSettings() {
+            document.getElementById('sync-owner').value = localStorage.getItem('gh_owner') || '';
+            document.getElementById('sync-repo').value = localStorage.getItem('gh_repo') || '';
+            document.getElementById('sync-token').value = localStorage.getItem('gh_token') || '';
+        }
+
+        async function fetchData() {
+            try {
+                const toolsRes = await fetch(`tools.json?t=${new Date().getTime()}`);
+                if (toolsRes.ok) {
+                    const data = await toolsRes.json();
+                    rawTools = Object.keys(data).map(filename => ({ filename: filename, ...data[filename] }));
+                }
+                const overrideRes = await fetch(`tools/override.json?t=${new Date().getTime()}`);
+                if (overrideRes.ok) cloudOverrides = await overrideRes.json();
+
+                localOverrides = { ...cloudOverrides, ...localOverrides };
+                localStorage.setItem('ai_tools_overrides', JSON.stringify(localOverrides));
+                applyOverrides();
+            } catch (error) { showDummyData(); }
+        }
+
+        function applyOverrides() {
+            allTools = rawTools.map(tool => {
+                const over = localOverrides[tool.filename] || {};
+                return {
+                    ...tool,
+                    name: over.name || tool.name || tool.filename.replace('.html', ''),
+                    icon: over.icon || tool.icon || '📱',
+                    description: tool.description || '',
+                    category: over.category || tool.category || 'アプリ'
+                };
+            });
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('tools-container').classList.remove('hidden');
+            generateCategoryFilters(); renderTools();
+        }
+
+        function toggleViewMode() {
+            viewMode = viewMode === 'ios' ? 'card' : 'ios';
+            localStorage.setItem('ai_tools_viewmode', viewMode);
+            updateToggleIcon(); renderTools();
+        }
+        function updateToggleIcon() {
+            const iconClass = viewMode === 'ios' ? 'fa-list' : 'fa-border-all';
+            document.getElementById('view-toggle-pc').innerHTML = `<i class="fa-solid ${iconClass} text-xl"></i>`;
+            document.getElementById('view-toggle-mobile').innerHTML = `<i class="fa-solid ${iconClass} text-xl"></i>`;
+            document.body.className = viewMode === 'ios' ? 'bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col transition-colors' : 'bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col transition-colors';
+        }
+
+        function openEditModal(e, fn) {
+            e.preventDefault(); e.stopPropagation();
+            const tool = allTools.find(t => t.filename === fn); if (!tool) return;
+            document.getElementById('edit-filename').value = tool.filename;
+            document.getElementById('edit-name').value = tool.name;
+            document.getElementById('edit-category').value = tool.category;
+            const iconVal = tool.icon; document.getElementById('edit-icon-hidden').value = iconVal;
+            const pd = document.getElementById('edit-icon-preview');
+            if (iconVal.startsWith('data:image')) {
+                document.getElementById('edit-icon-text').value = '';
+                pd.className = "w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-md border border-gray-200 overflow-hidden shrink-0";
+                pd.innerHTML = `<img src="${iconVal}" class="w-full h-full object-cover">`;
+            } else {
+                document.getElementById('edit-icon-text').value = iconVal;
+                pd.className = "w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-md border border-gray-200 bg-gradient-to-br from-blue-400 to-blue-600 text-white overflow-hidden shrink-0";
+                pd.innerHTML = iconVal;
+            }
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+        function closeEditModal() { document.getElementById('edit-modal').classList.add('hidden'); }
+        function saveEdit() {
+            const fn = document.getElementById('edit-filename').value;
+            const nI = document.getElementById('edit-icon-hidden').value;
+            const nN = document.getElementById('edit-name').value.trim();
+            const nC = document.getElementById('edit-category').value.trim();
+            if (!localOverrides[fn]) localOverrides[fn] = {};
+            if (nI) localOverrides[fn].icon = nI; if (nN) localOverrides[fn].name = nN; if (nC) localOverrides[fn].category = nC;
+            localStorage.setItem('ai_tools_overrides', JSON.stringify(localOverrides));
+            closeEditModal(); applyOverrides();
+        }
+        function resetEdit() {
+            const fn = document.getElementById('edit-filename').value;
+            if (localOverrides[fn]) { delete localOverrides[fn]; localStorage.setItem('ai_tools_overrides', JSON.stringify(localOverrides)); }
+            closeEditModal(); applyOverrides();
+        }
+        function updatePreviewFromText() {
+            const t = document.getElementById('edit-icon-text').value; const pd = document.getElementById('edit-icon-preview');
+            document.getElementById('edit-icon-hidden').value = t;
+            pd.className = "w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-md border border-gray-200 bg-gradient-to-br from-blue-400 to-blue-600 text-white overflow-hidden shrink-0";
+            pd.innerHTML = t || '📱';
+        }
+        function handleImageSelect(e) {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = document.getElementById('cropper-image'); img.src = ev.target.result;
+                document.getElementById('cropper-modal').classList.remove('hidden');
+                if (cropper) cropper.destroy();
+                cropper = new Cropper(img, { aspectRatio: 1, viewMode: 1, dragMode: 'move', autoCropArea: 0.9, cropBoxMovable: true, cropBoxResizable: true });
+            };
+            reader.readAsDataURL(file);
+        }
+        function closeCropperModal() { document.getElementById('cropper-modal').classList.add('hidden'); if (cropper) { cropper.destroy(); cropper = null; } document.getElementById('icon-file-input').value = ''; }
+        function applyCrop() {
+            if (!cropper) return;
+            const canvas = cropper.getCroppedCanvas({ width: 128, height: 128, imageSmoothingEnabled: true, imageSmoothingQuality: 'high' });
+            const b64 = canvas.toDataURL('image/png');
+            const pd = document.getElementById('edit-icon-preview');
+            pd.innerHTML = `<img src="${b64}" class="w-full h-full object-cover">`;
+            pd.className = "w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-md border border-gray-200 overflow-hidden shrink-0";
+            document.getElementById('edit-icon-hidden').value = b64; document.getElementById('edit-icon-text').value = '';
+            closeCropperModal();
+        }
+
+        function openSyncModal() { document.getElementById('sync-msg').classList.add('hidden'); document.getElementById('sync-modal').classList.remove('hidden'); }
+        function closeSyncModal() { document.getElementById('sync-modal').classList.add('hidden'); }
+        function utf8_to_b64(str) { const bytes = new TextEncoder().encode(str); let bin = ''; for (let i = 0; i < bytes.byteLength; i++) bin += String.fromCharCode(bytes[i]); return btoa(bin); }
+        
+        async function syncToGitHub() {
+            const o = document.getElementById('sync-owner').value, r = document.getElementById('sync-repo').value, t = document.getElementById('sync-token').value, msgArea = document.getElementById('sync-msg');
+            if (!o || !r || !t) { msgArea.textContent = '設定をすべて入力してください。'; msgArea.className = 'text-sm text-center font-bold p-2 rounded bg-red-100 text-red-600'; msgArea.classList.remove('hidden'); return; }
+            localStorage.setItem('gh_owner', o); localStorage.setItem('gh_repo', r); localStorage.setItem('gh_token', t);
+            
+            document.getElementById('sync-btn-text').textContent = '保存中...'; document.getElementById('sync-loader').style.display = 'inline-block'; document.getElementById('btn-sync').disabled = true; msgArea.classList.add('hidden');
+            
+            try {
+                const url = `https://api.github.com/repos/${o}/${r}/contents/tools/override.json`;
+                const headers = { "Authorization": `token ${t}`, "Accept": "application/vnd.github.v3+json" };
+                let sha = undefined;
+                const getRes = await fetch(url, { headers });
+                if (getRes.ok) sha = (await getRes.json()).sha; else if (getRes.status !== 404) throw new Error('API接続エラー');
+                
+                const b64 = utf8_to_b64(JSON.stringify(localOverrides, null, 2));
+                const body = { message: "Update override.json via Portal UI", content: b64 }; if (sha) body.sha = sha;
+                
+                const putRes = await fetch(url, { method: 'PUT', headers: { ...headers, "Content-Type": "application/json" }, body: JSON.stringify(body) });
+                if (!putRes.ok) throw new Error(`保存失敗: ${(await putRes.json()).message}`);
+                
+                msgArea.textContent = '✅ クラウドへの保存が完了しました！'; msgArea.className = 'text-sm text-center font-bold p-2 rounded bg-green-100 text-green-700 mt-2'; msgArea.classList.remove('hidden');
+                setTimeout(() => closeSyncModal(), 1500);
+            } catch (err) {
+                msgArea.textContent = `❌ エラー: ${err.message}`; msgArea.className = 'text-sm text-center font-bold p-2 rounded bg-red-100 text-red-600 mt-2'; msgArea.classList.remove('hidden');
+            } finally {
+                document.getElementById('sync-btn-text').textContent = '編集内容をGitHubに保存する'; document.getElementById('sync-loader').style.display = 'none'; document.getElementById('btn-sync').disabled = false;
+            }
+        }
+
+        function getColorForCategory(str) { let hash = 0; for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash); return colorGradients[Math.abs(hash) % colorGradients.length]; }
+        function generateCategoryFilters() {
+            const c = new Set(allTools.map(t => t.category)); const fc = document.getElementById('category-filters');
+            fc.innerHTML = `<button class="filter-btn px-4 py-1.5 rounded-full text-sm font-bold bg-slate-800 text-white" data-category="all" onclick="setCategory('all')">すべて</button>`;
+            Array.from(c).sort().forEach(cat => {
+                const b = document.createElement('button'); b.className = 'filter-btn px-4 py-1.5 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-50';
+                b.dataset.category = cat; b.textContent = cat; b.onclick = () => setCategory(cat); fc.appendChild(b);
+            });
+        }
+        function setCategory(cat) { currentCategory = cat; document.querySelectorAll('.filter-btn').forEach(b => { b.className = b.dataset.category === cat ? 'filter-btn px-4 py-1.5 rounded-full text-sm font-bold bg-slate-800 text-white shadow-sm' : 'filter-btn px-4 py-1.5 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'; }); renderTools(); }
+        function toggleFavorite(e, fn) { e.preventDefault(); e.stopPropagation(); const idx = favorites.indexOf(fn); idx > -1 ? favorites.splice(idx, 1) : favorites.push(fn); localStorage.setItem('ai_tools_favorites', JSON.stringify(favorites)); renderTools(); }
+
+        function renderTools() {
+            const container = document.getElementById('tools-container'); container.innerHTML = '';
+            let filtered = allTools.filter(t => (currentCategory === 'all' || t.category === currentCategory) && (t.name.toLowerCase().includes(searchQuery) || t.description.toLowerCase().includes(searchQuery)));
+            filtered.sort((a, b) => { const aF = favorites.includes(a.filename), bF = favorites.includes(b.filename); if (aF && !bF) return -1; if (!aF && bF) return 1; return a.name.localeCompare(b.name, 'ja'); });
+
+            if (!filtered.length) { container.classList.add('hidden'); document.getElementById('no-results').classList.remove('hidden'); return; }
+            container.classList.remove('hidden'); document.getElementById('no-results').classList.add('hidden');
+
+            if (viewMode === 'ios') {
+                container.className = "grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-x-2 gap-y-6 justify-items-center mt-4";
+                filtered.forEach(tool => {
+                    const isFav = favorites.includes(tool.filename);
+                    const isImg = tool.icon.startsWith('data:image');
+                    const iconContent = isImg ? `<div class="w-full h-full rounded-2xl overflow-hidden shadow-sm"><img src="${tool.icon}" class="w-full h-full object-cover"></div>` : `<div class="w-full h-full rounded-2xl bg-gradient-to-br ${getColorForCategory(tool.category)} flex items-center justify-center ios-icon-bg">${tool.icon}</div>`;
+                    const viewerUrl = `viewer.html?file=${encodeURIComponent(tool.filename)}&name=${encodeURIComponent(tool.name)}`;
+                    
+                    const item = document.createElement('a');
+                    item.href = viewerUrl;
+                    item.className = "ios-icon-item flex flex-col items-center w-full max-w-[80px] group relative";
+                    item.innerHTML = `
+                        <div class="w-[60px] h-[60px] sm:w-[72px] sm:h-[72px] text-white text-3xl sm:text-4xl relative mb-1.5 rounded-2xl">
+                            ${iconContent}
+                            ${isFav ? `<div class="absolute -top-1.5 -left-1.5 text-yellow-400 text-sm drop-shadow-md z-10"><i class="fa-solid fa-star"></i></div>` : ''}
+                        </div>
+                        <span class="text-[11px] sm:text-xs text-slate-800 font-medium text-center leading-tight line-clamp-2 w-full px-1 drop-shadow-sm">${tool.name}</span>
+                        <div class="hidden sm:flex absolute top-0 right-0 w-[72px] h-[72px] bg-black bg-opacity-50 rounded-2xl flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity space-y-2 z-20">
+                            <button onclick="toggleFavorite(event, '${tool.filename}')" class="text-white hover:scale-110"><i class="fa-solid fa-star ${isFav ? 'text-yellow-400' : 'text-white'} text-xl"></i></button>
+                            <button onclick="openEditModal(event, '${tool.filename}')" class="text-white hover:scale-110"><i class="fa-solid fa-pen-to-square text-lg"></i></button>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+            } else {
+                container.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-2";
+                filtered.forEach(tool => {
+                    const isFav = favorites.includes(tool.filename);
+                    const isImg = tool.icon.startsWith('data:image');
+                    const iconDisplay = isImg ? `<img src="${tool.icon}" class="w-full h-full object-cover rounded-lg">` : tool.icon;
+                    const viewerUrl = `viewer.html?file=${encodeURIComponent(tool.filename)}&name=${encodeURIComponent(tool.name)}`;
+
+                    const item = document.createElement('a');
+                    item.href = viewerUrl; 
+                    item.className = "card-view-item block bg-white rounded-xl p-4 border border-slate-200 relative group";
+                    item.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="text-3xl bg-slate-50 rounded-lg w-12 h-12 flex items-center justify-center overflow-hidden shrink-0">${iconDisplay}</div>
+                            <div class="flex space-x-2">
+                                <button onclick="openEditModal(event, '${tool.filename}')" class="p-2 -mt-2 outline-none text-slate-300 hover:text-blue-500"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button onclick="toggleFavorite(event, '${tool.filename}')" class="p-2 -mr-2 -mt-2 outline-none"><i class="fa-solid fa-star text-lg ${isFav ? 'star-active' : 'star-inactive'} hover:text-yellow-400"></i></button>
+                            </div>
+                        </div>
+                        <h3 class="font-bold text-slate-800 text-lg mb-1 truncate">${tool.name}</h3>
+                        <div class="inline-block px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-bold mb-2">${tool.category}</div>
+                        <p class="text-sm text-slate-500 line-clamp-2">${tool.description}</p>
+                    `;
+                    container.appendChild(item);
+                });
+            }
+        }
+
+        function showDummyData() {
+            document.getElementById('error-message').classList.add('hidden');
+            rawTools = [
+                { filename: 'dummy.html', name: 'ダミー計算機', icon: '💰', category: 'サンプル', description: 'タップしてビュアー画面をテストします。' }
+            ];
+            applyOverrides();
+        }
+    </script>
+</body>
+</html>

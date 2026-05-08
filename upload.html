@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIツール アップローダー</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .tab-active { border-bottom: 2px solid #3b82f6; color: #3b82f6; }
+        .tab-inactive { color: #6b7280; }
+        #loader, #repo-loader { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen p-4 md:p-8">
+
+    <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="bg-blue-600 p-4 text-white flex justify-between items-center">
+            <h1 class="text-xl font-bold"><i class="fa-solid fa-cloud-arrow-up mr-2"></i>ツール追加</h1>
+            <button onclick="toggleSettings()" class="text-white hover:text-gray-200" title="設定">
+                <i class="fa-solid fa-gear text-lg"></i>
+            </button>
+        </div>
+
+        <div id="settings-panel" class="p-4 bg-gray-50 border-b border-gray-200 hidden">
+            <h2 class="text-sm font-semibold text-gray-600 mb-3"><i class="fa-solid fa-wrench mr-1"></i>GitHub 接続設定</h2>
+            <div class="space-y-3 text-sm">
+                <div>
+                    <label class="block text-gray-700 mb-1">GitHub ユーザー名</label>
+                    <input type="text" id="gh-owner" placeholder="例: your-username" class="w-full px-3 py-2 border rounded focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-1">アクセストークン (PAT)</label>
+                    <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxx" class="w-full px-3 py-2 border rounded focus:outline-none focus:border-blue-500">
+                    <p class="text-xs text-gray-500 mt-1">※設定はブラウザにのみ保存されます</p>
+                </div>
+                
+                <div class="pt-2 border-t border-gray-200">
+                    <label class="block text-gray-700 mb-1">対象リポジトリ</label>
+                    <div class="flex items-center space-x-2">
+                        <select id="gh-repo-select" class="flex-1 px-3 py-2 border rounded focus:outline-none focus:border-blue-500 bg-white" disabled>
+                            <option value="">情報を取得してください</option>
+                        </select>
+                        <button onclick="fetchRepositories()" class="bg-indigo-100 text-indigo-700 px-3 py-2 rounded hover:bg-indigo-200 transition" title="リポジトリ一覧を取得">
+                            <i id="repo-loader" class="fa-solid fa-spinner fa-spin mr-1"></i>
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </button>
+                    </div>
+                </div>
+                <button onclick="saveSettings()" class="w-full bg-gray-800 text-white py-2 rounded hover:bg-gray-700 transition mt-4">設定を保存</button>
+            </div>
+        </div>
+
+        <div class="p-4">
+            <div class="flex border-b border-gray-200 mb-4">
+                <button id="tab-file" onclick="switchTab('file')" class="flex-1 py-2 text-center font-medium tab-active">ファイル選択</button>
+                <button id="tab-code" onclick="switchTab('code')" class="flex-1 py-2 text-center font-medium tab-inactive">コード貼付</button>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">保存するファイル名</label>
+                <div class="flex items-center">
+                    <input type="text" id="filename" placeholder="例: calc" class="w-full px-3 py-2 border rounded-l focus:outline-none focus:border-blue-500">
+                    <span class="bg-gray-200 border border-l-0 px-3 py-2 rounded-r text-gray-600">.html</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">※同名ファイルがある場合は自動で日時が付与されます</p>
+            </div>
+
+            <div id="area-file" class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">HTMLファイルを選択</label>
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition cursor-pointer" onclick="document.getElementById('file-input').click()">
+                    <i class="fa-regular fa-file-code text-3xl text-gray-400 mb-2"></i>
+                    <p class="text-sm text-gray-500" id="file-label">タップしてファイルを選択</p>
+                    <input type="file" id="file-input" accept=".html" class="hidden" onchange="handleFileSelect(event)">
+                </div>
+            </div>
+
+            <div id="area-code" class="mb-4 hidden">
+                <label class="block text-gray-700 text-sm font-bold mb-2">HTMLコード</label>
+                <textarea id="code-input" rows="8" placeholder="<!DOCTYPE html>&#10;<html>...&#10;</html>" class="w-full px-3 py-2 border rounded focus:outline-none focus:border-blue-500 font-mono text-sm"></textarea>
+            </div>
+
+            <button onclick="processUpload()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow-md flex justify-center items-center">
+                <span id="btn-text">🚀 GitHubへアップロード</span>
+                <i id="loader" class="fa-solid fa-spinner fa-spin ml-2"></i>
+            </button>
+
+            <div id="message-area" class="mt-4 text-sm hidden p-3 rounded"></div>
+            
+            <div class="mt-6 text-center">
+                <a href="index.html" class="text-blue-500 hover:text-blue-700 text-sm font-medium"><i class="fa-solid fa-house mr-1"></i>ポータルに戻る</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'file';
+        let loadedFileContent = '';
+
+        window.onload = () => {
+            const owner = localStorage.getItem('gh_owner');
+            const token = localStorage.getItem('gh_token');
+            const savedRepo = localStorage.getItem('gh_repo');
+            if (owner && token) {
+                document.getElementById('gh-owner').value = owner;
+                document.getElementById('gh-token').value = token;
+                fetchRepositories(savedRepo);
+            } else {
+                document.getElementById('settings-panel').classList.remove('hidden');
+            }
+        };
+
+        function toggleSettings() { document.getElementById('settings-panel').classList.toggle('hidden'); }
+
+        async function fetchRepositories(savedRepoToSelect = null) {
+            const token = document.getElementById('gh-token').value;
+            const selectEl = document.getElementById('gh-repo-select');
+            const loader = document.getElementById('repo-loader');
+            if (!token) { alert('先にアクセストークンを入力してください。'); return; }
+            loader.style.display = 'inline-block'; selectEl.disabled = true;
+
+            try {
+                const response = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', {
+                    headers: { "Authorization": `token ${token}`, "Accept": "application/vnd.github.v3+json" }
+                });
+                if (!response.ok) throw new Error('取得に失敗しました。トークンが正しいか確認してください。');
+                const repos = await response.json();
+                
+                selectEl.innerHTML = '';
+                if (repos.length === 0) { selectEl.innerHTML = '<option value="">リポジトリが見つかりません</option>'; return; }
+                repos.forEach(repo => {
+                    const option = document.createElement('option');
+                    option.value = repo.name; option.textContent = `${repo.owner.login} / ${repo.name}`;
+                    selectEl.appendChild(option);
+                });
+                selectEl.disabled = false;
+                if (savedRepoToSelect && Array.from(selectEl.options).some(opt => opt.value === savedRepoToSelect)) {
+                    selectEl.value = savedRepoToSelect;
+                }
+            } catch (error) {
+                alert(error.message); selectEl.innerHTML = '<option value="">エラーが発生しました</option>';
+            } finally { loader.style.display = 'none'; }
+        }
+
+        function saveSettings() {
+            const owner = document.getElementById('gh-owner').value;
+            const token = document.getElementById('gh-token').value;
+            const repo = document.getElementById('gh-repo-select').value;
+            if (!repo) { alert('リポジトリを取得して選択してください。'); return; }
+            localStorage.setItem('gh_owner', owner); localStorage.setItem('gh_token', token); localStorage.setItem('gh_repo', repo);
+            showMessage('設定を保存しました！', 'success'); setTimeout(() => toggleSettings(), 1000);
+        }
+
+        function switchTab(mode) {
+            currentMode = mode;
+            document.getElementById('tab-file').className = mode === 'file' ? 'flex-1 py-2 text-center font-medium tab-active' : 'flex-1 py-2 text-center font-medium tab-inactive';
+            document.getElementById('tab-code').className = mode === 'code' ? 'flex-1 py-2 text-center font-medium tab-active' : 'flex-1 py-2 text-center font-medium tab-inactive';
+            document.getElementById('area-file').classList.toggle('hidden', mode !== 'file');
+            document.getElementById('area-code').classList.toggle('hidden', mode !== 'code');
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0]; if (!file) return;
+            document.getElementById('file-label').innerHTML = `<span class="text-blue-600 font-bold">${file.name}</span><br>選択済み`;
+            document.getElementById('filename').value = file.name.replace(/\.[^/.]+$/, "");
+            const reader = new FileReader(); reader.onload = (e) => { loadedFileContent = e.target.result; }; reader.readAsText(file);
+        }
+
+        function showMessage(msg, type) {
+            const area = document.getElementById('message-area'); area.textContent = msg;
+            area.className = `mt-4 text-sm p-3 rounded ${type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-red-100 text-red-800 border border-red-200'}`;
+            area.classList.remove('hidden');
+        }
+
+        function setLoading(isLoading) {
+            document.getElementById('btn-text').textContent = isLoading ? 'アップロード中...' : '🚀 GitHubへアップロード';
+            document.getElementById('loader').style.display = isLoading ? 'inline-block' : 'none';
+            document.querySelector('button[onclick="processUpload()"]').disabled = isLoading;
+        }
+
+        function utf8_to_b64(str) {
+            const bytes = new TextEncoder().encode(str); let binary = '';
+            for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+            return btoa(binary);
+        }
+
+        async function processUpload() {
+            const owner = localStorage.getItem('gh_owner') || document.getElementById('gh-owner').value;
+            const token = localStorage.getItem('gh_token') || document.getElementById('gh-token').value;
+            const repo = localStorage.getItem('gh_repo') || document.getElementById('gh-repo-select').value;
+            
+            if (!owner || !repo || !token) { document.getElementById('settings-panel').classList.remove('hidden'); return showMessage('GitHubの設定を完了してください。', 'error'); }
+
+            let baseFilename = document.getElementById('filename').value.trim();
+            if (!baseFilename) return showMessage('ファイル名を入力してください。', 'error');
+            
+            let content = '';
+            if (currentMode === 'file') {
+                if (!loadedFileContent) return showMessage('ファイルが選択されていません。', 'error');
+                content = loadedFileContent;
+            } else {
+                content = document.getElementById('code-input').value.trim();
+                if (!content) return showMessage('コードが入力されていません。', 'error');
+            }
+
+            setLoading(true); document.getElementById('message-area').classList.add('hidden');
+
+            try {
+                const targetDir = 'tools'; 
+                const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${targetDir}`;
+                const headers = { "Authorization": `token ${token}`, "Accept": "application/vnd.github.v3+json" };
+
+                let existingFiles = [];
+                const checkRes = await fetch(apiUrl, { headers });
+                if (checkRes.ok) existingFiles = await checkRes.json();
+                else if (checkRes.status !== 404) throw new Error('API接続エラー。設定を確認してください。');
+
+                let finalFilename = `${baseFilename}.html`;
+                const existingNames = existingFiles.map(f => f.name);
+                
+                if (existingNames.includes(finalFilename)) {
+                    const now = new Date();
+                    const ds = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+                    finalFilename = `${baseFilename}_${ds}.html`;
+                }
+
+                const contentBase64 = utf8_to_b64(content);
+                const putUrl = `${apiUrl}/${finalFilename}`;
+                
+                const putRes = await fetch(putUrl, {
+                    method: 'PUT',
+                    headers: { ...headers, "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: `Add ${finalFilename} via Web Uploader`, content: contentBase64 })
+                });
+
+                if (!putRes.ok) { const errData = await putRes.json(); throw new Error(`アップロード失敗: ${errData.message}`); }
+
+                showMessage(`✅ 成功！「${finalFilename}」として保存されました。数分後にポータルに反映されます。`, 'success');
+                
+                document.getElementById('code-input').value = ''; document.getElementById('filename').value = ''; loadedFileContent = ''; document.getElementById('file-label').innerHTML = 'タップしてファイルを選択';
+
+            } catch (error) { showMessage(`❌ エラー: ${error.message}`, 'error'); } finally { setLoading(false); }
+        }
+    </script>
+</body>
+</html>
