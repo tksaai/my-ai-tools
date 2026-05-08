@@ -10,5 +10,11 @@
     "icon": "📱",
     "description": "生成AIで作成したツールです。",
     "category": "アプリ"
+  },
+  "game.html": {
+    "name": "10-in-1 Web Arcade",
+    "icon": "📱",
+    "description": "生成AIで作成したツールです。",
+    "category": "アプリ"
   }
 }
