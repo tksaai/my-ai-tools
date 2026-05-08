@@ -1,0 +1,278 @@
+html
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>異世界乱数ずらし</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Hiragino Maru Gothic ProN', 'Rounded M+ 1c', 'Zen Maru Gothic', 'Segoe UI', sans-serif;
+            background-color: #1a362b;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        /* 視認性特化：フチドリ */
+        .text-outline {
+            text-shadow: 
+                -3px -3px 0 #111827,  
+                 3px -3px 0 #111827,
+                -3px  3px 0 #111827,
+                 3px  3px 0 #111827,
+                 0px  4px 0 #111827;
+        }
+        
+        .text-outline-white {
+            text-shadow: 
+                -3px -3px 0 #ffffff,  
+                 3px -3px 0 #ffffff,
+                -3px  3px 0 #ffffff,
+                 3px  3px 0 #ffffff,
+                 0px  5px 0 #111827;
+        }
+
+        .text-outline-sm {
+            text-shadow: 
+                -2px -2px 0 #111827,  
+                 2px -2px 0 #111827,
+                -2px  2px 0 #111827,
+                 2px  2px 0 #111827,
+                 0px  3px 0 #111827;
+        }
+
+        /* 透明度による状態切り替え */
+        .status-layer {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #appContainer[data-state="idle"] #layer-idle { opacity: 1; }
+        #appContainer[data-state="waiting"] #layer-waiting { opacity: 1; }
+        #appContainer[data-state="ready"] #layer-ready { opacity: 1; }
+
+        /* ボタンの沈み込みギミック */
+        .svg-btn-wrapper {
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #red-btn-group {
+            transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .svg-btn-wrapper:active #red-btn-group,
+        #appContainer[data-state="waiting"] #red-btn-group {
+            transform: translateY(14px);
+        }
+
+        /* プログレスバー（綺麗に表示されるように修正） */
+        #progressBar {
+            width: 0%;
+            height: 100%;
+            border-radius: 9999px; /* バーの先端も丸くする */
+            background-color: #ef4444; /* 基本は赤 */
+            will-change: width;
+        }
+        #appContainer[data-state="waiting"] #progressBar {
+            background-color: #3b82f6; /* 待機中は青 */
+        }
+
+        @keyframes flash-bg {
+            0%, 100% { background-color: #1a362b; }
+            50% { background-color: #dc2626; }
+        }
+        .bg-flash {
+            animation: flash-bg 0.3s ease-out;
+        }
+        @keyframes pulse-fast {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .animate-pulse-fast {
+            animation: pulse-fast 0.5s infinite;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col items-center justify-between overflow-hidden fixed inset-0 py-8">
+
+    <div id="appContainer" data-state="idle" class="w-full h-full flex flex-col">
+
+        <!-- 上部：ステータス表示エリア -->
+        <div class="w-full flex flex-col items-center flex-none px-4 mt-2">
+            <h1 class="text-3xl font-black text-yellow-300 text-outline tracking-widest mb-2">乱数ずらし</h1>
+            
+            <div class="relative w-full h-36">
+                <!-- 状態1: START -->
+                <div id="layer-idle" class="status-layer">
+                    <div class="text-6xl font-black text-white text-outline tracking-wider mb-2">START</div>
+                    <div class="text-xl font-bold text-gray-200 text-outline-sm">ボタンを押すのだ！</div>
+                </div>
+
+                <!-- 状態2: WAIT -->
+                <div id="layer-waiting" class="status-layer">
+                    <div class="text-6xl font-black text-blue-300 text-outline tracking-wider mb-2 animate-pulse-fast">WAIT</div>
+                    <div class="text-lg font-bold text-gray-300 text-outline-sm mb-2">魔力充填中... <span class="text-yellow-200">(押して中止)</span></div>
+                    <div id="delayInfo" class="text-base text-red-400 font-bold bg-gray-900/60 px-4 py-1 rounded-full border border-gray-700 shadow-md">
+                        [ ずらし: +0.00秒 ]
+                    </div>
+                </div>
+
+                <!-- 状態3: READY -->
+                <div id="layer-ready" class="status-layer">
+                    <div class="text-7xl font-black text-red-600 text-outline-white tracking-wider mb-2">叩け！！</div>
+                    <div class="text-2xl font-bold text-yellow-300 text-outline-sm">レバーオン！</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 中部：異世界かるてっと風 SVGボタン -->
+        <div class="w-full flex justify-center flex-1 items-center -mt-4">
+            <div id="mainButton" class="svg-btn-wrapper w-full max-w-[340px] px-4">
+                <svg viewBox="0 0 300 250" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                    <!-- 影（位置を台座の右下底面のみに修正） -->
+                    <polygon points="150,225 270,165 285,175 165,235" fill="rgba(0,0,0,0.3)" />
+
+                    <!-- 青い土台 -->
+                    <polygon points="150,180 270,120 270,165 150,225" fill="#42658e" stroke="#111827" stroke-width="7" stroke-linejoin="round" />
+                    <polygon points="30,120 150,180 150,225 30,165" fill="#628cb3" stroke="#111827" stroke-width="7" stroke-linejoin="round" />
+                    <polygon points="150,60 270,120 150,180 30,120" fill="#87b0cc" stroke="#111827" stroke-width="7" stroke-linejoin="round" />
+                    
+                    <!-- 赤いボタン -->
+                    <g id="red-btn-group">
+                        <path d="M 100 110 v 16 a 50 25 0 0 0 100 0 v -16 Z" fill="#b52525" stroke="#111827" stroke-width="7" stroke-linejoin="round" />
+                        <ellipse cx="150" cy="110" rx="50" ry="25" fill="#e24040" stroke="#111827" stroke-width="7" />
+                    </g>
+                </svg>
+            </div>
+        </div>
+
+        <!-- 下部：メッセージとゲージ -->
+        <div class="w-full flex flex-col items-center justify-end pb-4 z-10 h-24">
+            <div id="occultMessage" class="text-base font-bold text-green-300 mb-3 opacity-0 transition-opacity">
+                Initializing...
+            </div>
+            
+            <!-- ゲージの枠の背景色を黒(bg-gray-900)にして、空の時に白く見えないようにする -->
+            <div class="w-11/12 h-6 border-4 border-gray-900 bg-gray-900 rounded-full shadow-lg relative p-[1px]">
+                <div id="progressBar"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const appContainer = document.getElementById('appContainer');
+        const occultMessage = document.getElementById('occultMessage');
+        const delayInfo = document.getElementById('delayInfo');
+        const progressBar = document.getElementById('progressBar');
+        const mainButton = document.getElementById('mainButton');
+
+        let isWaiting = false;
+        let isReady = false;
+        let messageInterval;
+        let timeoutId;
+
+        const baseWaitTime = 4100;
+        const maxRandomDelay = 3000;
+        const occultTexts = [
+            "乱数テーブル再構築中...",
+            "謎の魔力を蓄積中...",
+            "フラグ強制引き寄せ...",
+            "詠唱中...",
+            "タイミング意図的ずらし...",
+            "異世界への扉を検索中..."
+        ];
+
+        function handleAction() {
+            if (isReady) {
+                resetState();
+            } else if (isWaiting) {
+                resetState();
+            } else {
+                startWait();
+            }
+        }
+
+        function startWait() {
+            if (isWaiting) return;
+            isWaiting = true;
+            isReady = false;
+
+            const randomDelay = Math.floor(Math.random() * maxRandomDelay) + 100; 
+            const totalWaitTime = baseWaitTime + randomDelay;
+            const delaySeconds = (randomDelay / 1000).toFixed(2);
+
+            appContainer.setAttribute('data-state', 'waiting');
+            delayInfo.innerText = `[ ずらし: +${delaySeconds}秒 ]`;
+
+            // ゲージの初期化とアニメーション開始
+            progressBar.style.transition = 'none';
+            progressBar.style.width = '0%';
+            
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    progressBar.style.transition = `width ${totalWaitTime / 1000}s linear`;
+                    progressBar.style.width = '100%';
+                });
+            });
+
+            occultMessage.style.opacity = '1';
+            let msgIndex = 0;
+            messageInterval = setInterval(() => {
+                msgIndex = Math.floor(Math.random() * occultTexts.length);
+                occultMessage.innerText = occultTexts[msgIndex];
+            }, 800);
+
+            timeoutId = setTimeout(triggerReady, totalWaitTime);
+        }
+
+        function triggerReady() {
+            isWaiting = false;
+            isReady = true;
+
+            clearInterval(messageInterval);
+            occultMessage.style.opacity = '0';
+
+            appContainer.setAttribute('data-state', 'ready');
+            progressBar.style.width = '100%';
+            
+            document.body.classList.remove('bg-flash');
+            void document.body.offsetWidth; 
+            document.body.classList.add('bg-flash');
+        }
+
+        function resetState() {
+            isWaiting = false;
+            isReady = false;
+            clearInterval(messageInterval);
+            clearTimeout(timeoutId);
+
+            appContainer.setAttribute('data-state', 'idle');
+            occultMessage.style.opacity = '0';
+            
+            progressBar.style.transition = 'none';
+            progressBar.style.width = '0%';
+            document.body.classList.remove('bg-flash');
+        }
+
+        mainButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleAction();
+        }, { passive: false });
+
+        mainButton.addEventListener('click', (e) => {
+            if (!('ontouchstart' in window)) {
+                handleAction();
+            }
+        });
+    </script>
+</body>
+</html>
