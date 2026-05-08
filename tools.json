@@ -4,5 +4,11 @@
     "icon": "📱",
     "description": "生成AIで作成したツールです。",
     "category": "アプリ"
+  },
+  "subscManeger.html": {
+    "name": "My Subsc Manager",
+    "icon": "📱",
+    "description": "生成AIで作成したツールです。",
+    "category": "アプリ"
   }
 }
