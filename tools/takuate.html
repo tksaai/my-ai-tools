@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>スロット2択 オカルトナビゲーター</title>
+<style>
+    body {
+        font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+        background-color: #0a0a0a;
+        color: #fff;
+        text-align: center;
+        padding: 20px;
+        margin: 0;
+    }
+    h1 {
+        color: #ffd700;
+        text-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+        font-size: 1.8em;
+        margin-bottom: 5px;
+    }
+    .subtitle {
+        color: #aaa;
+        font-size: 0.9em;
+        margin-bottom: 30px;
+    }
+    #result-box {
+        margin: 0 auto 20px;
+        width: 220px;
+        height: 220px;
+        border: 4px solid #444;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 5em;
+        font-weight: bold;
+        background: radial-gradient(circle, #2a2a2a, #111);
+        box-shadow: inset 0 0 20px #000, 0 0 15px rgba(0,0,0,0.5);
+        transition: all 0.3s ease;
+    }
+    /* 結果ごとの光り方 */
+    .left-result {
+        color: #00ffff;
+        text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
+        border-color: #00ffff !important;
+        box-shadow: 0 0 30px rgba(0, 255, 255, 0.4) !important;
+    }
+    .right-result {
+        color: #ff00ff;
+        text-shadow: 0 0 20px #ff00ff, 0 0 40px #ff00ff;
+        border-color: #ff00ff !important;
+        box-shadow: 0 0 30px rgba(255, 0, 255, 0.4) !important;
+    }
+    .middle-result {
+        color: #00ff00;
+        text-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00;
+        border-color: #00ff00 !important;
+        box-shadow: 0 0 30px rgba(0, 255, 0, 0.4) !important;
+    }
+    
+    #message-box {
+        height: 40px;
+        margin-bottom: 30px;
+        font-size: 1.1em;
+        color: #ffaa00;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    button {
+        padding: 15px 40px;
+        font-size: 1.4em;
+        background: linear-gradient(to bottom, #d32f2f, #9c1414);
+        color: white;
+        border: 2px solid #ff5252;
+        border-radius: 50px;
+        cursor: pointer;
+        box-shadow: 0 6px 0 #7f0000, 0 10px 15px rgba(0,0,0,0.5);
+        font-weight: bold;
+        text-shadow: 1px 1px 2px #000;
+        transition: all 0.1s;
+    }
+    button:active {
+        transform: translateY(6px);
+        box-shadow: 0 0 0 #7f0000, 0 4px 5px rgba(0,0,0,0.5);
+    }
+    button:disabled {
+        background: #555;
+        border-color: #444;
+        box-shadow: 0 6px 0 #333;
+        color: #888;
+        cursor: not-allowed;
+    }
+    .small-text {
+        margin-top: 40px;
+        font-size: 0.8em;
+        color: #666;
+    }
+</style>
+</head>
+<body>
+
+    <h1>🎰 究極オカルト2択ナビ 🎰</h1>
+    <p class="subtitle">己のヒキを信じられない者よ、宇宙の波動に委ねよ</p>
+
+    <div id="result-box">？</div>
+    <div id="message-box">ボタンを押して運命を決定</div>
+
+    <button id="btn">オカルト受信！</button>
+
+    <p class="small-text">※確率は完全な1/2(50%)です。このツールによるいかなる負債も宇宙は責任を負いません。</p>
+
+    <script>
+        const btn = document.getElementById('btn');
+        const resultBox = document.getElementById('result-box');
+        const messageBox = document.getElementById('message-box');
+
+        // 胡散臭いオカルトメッセージのリスト
+        const occultMessages = [
+            "宇宙の波動をスキャン中...",
+            "ホールの気圧・湿度を計算中...",
+            "店長室のオーラを透視中...",
+            "前任者の怨念を浄化中...",
+            "レバーの微細な振動を解析中...",
+            "確率の収束をねじ曲げ中...",
+            "第6感をフル稼働中...",
+            "見えない波に乗る準備中...",
+            "スロットの神に祈祷中..."
+        ];
+
+        btn.addEventListener('click', () => {
+            // ボタンを無効化して連打防止
+            btn.disabled = true;
+            resultBox.innerHTML = '🌀';
+            resultBox.className = ''; // クラスをリセット
+            
+            let count = 0;
+            const maxCount = 6; // メッセージを切り替える回数
+            
+            // オカルト演出のタイマー
+            const interval = setInterval(() => {
+                // ランダムなメッセージを表示
+                const randomIndex = Math.floor(Math.random() * occultMessages.length);
+                messageBox.innerText = occultMessages[randomIndex];
+                count++;
+                
+                if (count >= maxCount) {
+                    clearInterval(interval);
+                    decide();
+                }
+            }, 350); // 0.35秒ごとに切り替え
+        });
+
+        function decide() {
+            messageBox.innerText = "……導き出された答えは！！";
+            
+            // 運命の50%
+            const isLeft = Math.random() < 0.5;
+            
+            // 焦らし演出
+            setTimeout(() => {
+                if (isLeft) {
+                    resultBox.innerHTML = '左';
+                    resultBox.className = 'left-result';
+                } else {
+                    resultBox.innerHTML = '右';
+                    resultBox.className = 'right-result';
+                }
+                
+                messageBox.innerText = "信じるか信じないかは、あなた次第";
+                
+                // 少し待ってからボタンを復活
+                setTimeout(() => {
+                    btn.disabled = false;
+                }, 1000);
+            }, 800); 
+        }
+    </script>
+</body>
+</html>
