@@ -1,4 +1,16 @@
 {
+  "game.html": {
+    "name": "10-in-1 Web Arcade",
+    "icon": "📱",
+    "description": "生成AIで作成したツールです。",
+    "category": "アプリ"
+  },
+  "tact.html": {
+    "name": "小役リズムジャッジ | Occult Tact Trainer",
+    "icon": "📱",
+    "description": "スマスロ takt op. 風の小役オカルト体感トレーナー。子役確率を編集してリズム判定と期待値確認ができます。",
+    "category": "アプリ"
+  },
   "isekaru.html": {
     "name": "異世界乱数ずらし",
     "icon": "📱",
@@ -11,20 +23,14 @@
     "description": "生成AIで作成したツールです。",
     "category": "アプリ"
   },
-  "subscManeger.html": {
-    "name": "My Subsc Manager",
-    "icon": "📱",
-    "description": "生成AIで作成したツールです。",
-    "category": "アプリ"
-  },
   "hamari.html": {
     "name": "hamari",
     "icon": "📱",
     "description": "生成AIで作成したツールです。",
     "category": "アプリ"
   },
-  "game.html": {
-    "name": "10-in-1 Web Arcade",
+  "subscManeger.html": {
+    "name": "My Subsc Manager",
     "icon": "📱",
     "description": "生成AIで作成したツールです。",
     "category": "アプリ"
