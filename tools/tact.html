@@ -1,0 +1,1640 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="スマスロ takt op. 風の小役オカルト体感トレーナー。子役確率を編集してリズム判定と期待値確認ができます。"
+    />
+    <meta name="theme-color" content="#141014" />
+    <title>小役リズムジャッジ | Occult Tact Trainer</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTAiIGZpbGw9IiMxNDEwMTQiLz4KICA8Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIyNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZjRjOTVkIiBzdHJva2Utd2lkdGg9IjQiLz4KICA8cGF0aCBmaWxsPSIjY2YzMTQ4IiBkPSJNMzAgOWg0bDMgMTggMTggM3Y0bC0xOCAzLTMgMThoLTRsLTMtMTgtMTgtM3YtNGwxOC0zeiIvPgogIDxwYXRoIGZpbGw9IiM1NmQ2ZDYiIGQ9Ik0yMiA0MmM3IDUgMTUgNSAyMSAwbDMgNWMtOCA3LTE5IDctMjggMHoiLz4KPC9zdmc+Cg==" type="image/svg+xml" />
+    <style>
+:root {
+  --bg: #141014;
+  --bg-2: #21151d;
+  --panel: rgba(32, 23, 28, 0.86);
+  --panel-strong: rgba(48, 28, 35, 0.94);
+  --line: rgba(255, 231, 173, 0.18);
+  --text: #fff7e8;
+  --muted: #d0b8a2;
+  --gold: #f4c95d;
+  --amber: #ff9f43;
+  --red: #cf3148;
+  --rose: #ff496c;
+  --cyan: #56d6d6;
+  --green: #79d278;
+  --ink: #0d0b10;
+  --shadow: 0 18px 60px rgba(0, 0, 0, 0.38);
+  color-scheme: dark;
+  font-family:
+    Inter, "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo,
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--bg);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 12% 18%, rgba(207, 49, 72, 0.28), transparent 28rem),
+    radial-gradient(circle at 84% 10%, rgba(86, 214, 214, 0.16), transparent 22rem),
+    linear-gradient(145deg, #130e13 0%, #241018 48%, #0d1214 100%);
+  overflow-x: hidden;
+}
+
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  content: "";
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(244, 201, 93, 0.08) 0,
+      rgba(244, 201, 93, 0.08) 1px,
+      transparent 1px,
+      transparent 38px
+    ),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04), transparent 28%, rgba(0, 0, 0, 0.18));
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 78%);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+#noteCanvas {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem clamp(1rem, 3vw, 2.4rem);
+  border-bottom: 1px solid rgba(244, 201, 93, 0.16);
+  background: rgba(18, 12, 16, 0.82);
+  backdrop-filter: blur(16px);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: 0.8rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.brand img {
+  width: 44px;
+  height: 44px;
+  filter: drop-shadow(0 0 16px rgba(244, 201, 93, 0.28));
+}
+
+.brand span {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.brand strong {
+  overflow: hidden;
+  font-size: clamp(0.86rem, 2vw, 1rem);
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.brand small,
+.app-footer,
+.hero-alert,
+.dialog-note {
+  color: var(--muted);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex: 0 0 auto;
+}
+
+.icon-button,
+.line-button,
+.primary-button,
+.judge-button {
+  min-height: 42px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    background 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.icon-button {
+  display: inline-grid;
+  width: 42px;
+  place-items: center;
+  border: 1px solid rgba(244, 201, 93, 0.24);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--gold);
+  font-weight: 800;
+}
+
+.line-button,
+.primary-button {
+  border: 1px solid rgba(244, 201, 93, 0.28);
+  padding: 0.65rem 0.95rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.primary-button {
+  border-color: rgba(244, 201, 93, 0.8);
+  background: linear-gradient(135deg, #f4c95d, #ff9f43 45%, #cf3148);
+  color: #170c0d;
+}
+
+.danger {
+  border-color: rgba(255, 73, 108, 0.34);
+  color: #ffd4dc;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+main {
+  width: min(1220px, calc(100% - 2rem));
+  margin: 0 auto;
+}
+
+.judge-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(310px, 0.72fr);
+  gap: clamp(1rem, 4vw, 3rem);
+  align-items: center;
+  min-height: calc(100vh - 88px);
+  padding: clamp(1.2rem, 5vw, 4rem) 0 2rem;
+}
+
+.hero-copy {
+  max-width: 680px;
+}
+
+.kicker,
+.panel-heading p,
+.dialog-head p {
+  margin: 0 0 0.35rem;
+  color: var(--cyan);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 1rem;
+  color: var(--text);
+  font-size: clamp(3.4rem, 11vw, 7.6rem);
+  line-height: 0.86;
+  letter-spacing: 0;
+  text-shadow:
+    0 0 26px rgba(255, 73, 108, 0.36),
+    0 8px 0 rgba(0, 0, 0, 0.2);
+}
+
+.hero-lead {
+  max-width: 54ch;
+  color: #f4dfca;
+  font-size: clamp(1rem, 2vw, 1.18rem);
+  line-height: 1.85;
+}
+
+.hero-alert {
+  display: inline-flex;
+  max-width: 58ch;
+  border: 1px solid rgba(86, 214, 214, 0.22);
+  border-left: 4px solid var(--cyan);
+  border-radius: 8px;
+  padding: 0.8rem 0.95rem;
+  background: rgba(7, 19, 23, 0.52);
+  line-height: 1.65;
+}
+
+.judge-board,
+.panel,
+.control-band,
+.settings-dialog {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.judge-board {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(1rem, 3vw, 1.45rem);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 32%),
+    radial-gradient(circle at 50% 4%, rgba(244, 201, 93, 0.25), transparent 13rem),
+    linear-gradient(160deg, rgba(72, 24, 34, 0.96), rgba(19, 17, 23, 0.95) 62%, rgba(10, 18, 20, 0.96));
+}
+
+.judge-board::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  background:
+    linear-gradient(90deg, transparent, rgba(244, 201, 93, 0.12), transparent),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 34px);
+  opacity: 0.55;
+}
+
+.board-topline,
+.result-stage,
+.combined-box,
+.stats-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.board-topline {
+  margin-bottom: 0.85rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.board-topline strong {
+  color: var(--gold);
+  font-size: 1.05rem;
+}
+
+.judge-wheel {
+  position: relative;
+  display: grid;
+  width: min(82vw, 360px);
+  aspect-ratio: 1;
+  margin: 0 auto 1rem;
+  place-items: center;
+  border: 1px solid rgba(244, 201, 93, 0.24);
+  border-radius: 50%;
+  background:
+    conic-gradient(from -24deg, rgba(255, 73, 108, 0.52), rgba(244, 201, 93, 0.42), rgba(86, 214, 214, 0.34), rgba(255, 73, 108, 0.52)),
+    radial-gradient(circle, #281018 0 34%, #120e14 60%, #07070a 100%);
+  box-shadow:
+    inset 0 0 42px rgba(0, 0, 0, 0.55),
+    0 0 42px rgba(207, 49, 72, 0.22);
+}
+
+.judge-wheel::after {
+  position: absolute;
+  inset: 9%;
+  content: "";
+  border: 1px solid rgba(255, 247, 232, 0.12);
+  border-radius: 50%;
+  background:
+    repeating-conic-gradient(from 0deg, rgba(255, 255, 255, 0.1) 0deg 1deg, transparent 1deg 12deg),
+    radial-gradient(circle, transparent 0 52%, rgba(0, 0, 0, 0.28) 53% 100%);
+}
+
+.target-aura {
+  position: absolute;
+  inset: 5%;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0deg, rgba(121, 210, 120, 0.6) 16deg, transparent 38deg);
+  filter: drop-shadow(0 0 18px rgba(121, 210, 120, 0.55));
+}
+
+.wheel-rings {
+  position: absolute;
+  inset: 0;
+}
+
+.wheel-rings span {
+  position: absolute;
+  inset: calc(var(--i, 0) * 12%);
+  border: 1px solid rgba(244, 201, 93, 0.13);
+  border-radius: 50%;
+}
+
+.wheel-rings span:nth-child(1) {
+  --i: 1;
+}
+
+.wheel-rings span:nth-child(2) {
+  --i: 2;
+}
+
+.wheel-rings span:nth-child(3) {
+  --i: 3;
+}
+
+.wheel-needle {
+  position: absolute;
+  top: 7%;
+  left: calc(50% - 2px);
+  z-index: 2;
+  width: 4px;
+  height: 43%;
+  border-radius: 999px;
+  background: linear-gradient(var(--gold), var(--rose), transparent);
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 0 12px rgba(244, 201, 93, 0.9));
+}
+
+.wheel-core {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  width: 48%;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid rgba(244, 201, 93, 0.34);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 25%, rgba(255, 255, 255, 0.12), transparent 38%),
+    linear-gradient(145deg, #23151b, #0b0a0d);
+  text-align: center;
+}
+
+.wheel-core span {
+  color: var(--gold);
+  font-size: clamp(1.5rem, 6vw, 2.5rem);
+}
+
+.wheel-core strong {
+  max-width: 88%;
+  overflow-wrap: anywhere;
+  font-size: clamp(1rem, 3vw, 1.25rem);
+}
+
+.wheel-core small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.judge-button {
+  width: 100%;
+  min-height: 64px;
+  border: 1px solid rgba(244, 201, 93, 0.72);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent 35%),
+    linear-gradient(135deg, var(--gold), var(--amber) 45%, var(--red));
+  color: #170b0c;
+  font-size: clamp(1.2rem, 4vw, 1.7rem);
+  font-weight: 1000;
+  letter-spacing: 0;
+  box-shadow:
+    inset 0 -10px 20px rgba(90, 18, 24, 0.26),
+    0 12px 28px rgba(207, 49, 72, 0.26);
+}
+
+.result-stage {
+  min-height: 66px;
+  margin-top: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.78rem 0.85rem;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.result-stage span {
+  color: var(--cyan);
+  font-weight: 1000;
+}
+
+.result-stage strong {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.phase-meter {
+  position: relative;
+  overflow: hidden;
+  height: 16px;
+  margin-top: 0.85rem;
+  border: 1px solid rgba(244, 201, 93, 0.18);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.phase-fill,
+.phase-window {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.phase-fill {
+  left: 0;
+  width: 0%;
+  background: linear-gradient(90deg, var(--red), var(--gold), var(--cyan));
+}
+
+.phase-window {
+  width: 12%;
+  background: rgba(121, 210, 120, 0.34);
+  box-shadow: 0 0 18px rgba(121, 210, 120, 0.5);
+}
+
+.control-band {
+  display: grid;
+  gap: 1rem;
+  margin: 0 0 1rem;
+  padding: 1rem;
+  background: rgba(13, 11, 16, 0.66);
+}
+
+.target-selector {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.role-chip {
+  display: grid;
+  min-height: 72px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 8px;
+  padding: 0.62rem;
+  background: rgba(255, 255, 255, 0.055);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.role-chip strong,
+.role-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.role-chip strong {
+  font-size: 0.94rem;
+}
+
+.role-chip span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.role-chip[aria-checked="true"] {
+  border-color: var(--role-color, var(--gold));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--role-color, var(--gold)) 24%, transparent), transparent),
+    rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--role-color, var(--gold)) 28%, transparent);
+}
+
+.control-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr minmax(150px, 0.55fr);
+  gap: 0.8rem;
+}
+
+.range-control,
+.number-control {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.7rem;
+  align-items: center;
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 8px;
+  padding: 0.72rem;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.range-control span,
+.number-control span {
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.range-control strong {
+  min-width: 4.1rem;
+  text-align: right;
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--gold);
+}
+
+input[type="number"] {
+  min-width: 0;
+  width: 100%;
+  border: 1px solid rgba(244, 201, 93, 0.22);
+  border-radius: 8px;
+  padding: 0.58rem 0.65rem;
+  background: rgba(0, 0, 0, 0.32);
+  color: var(--text);
+}
+
+.stats-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 1rem;
+}
+
+.stats-strip div {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.stats-strip span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.stats-strip strong {
+  font-size: clamp(1.35rem, 4vw, 2rem);
+}
+
+.panel-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.85fr) minmax(260px, 0.72fr);
+  gap: 1rem;
+  padding-bottom: 2rem;
+}
+
+.panel {
+  overflow: hidden;
+  padding: 1rem;
+  background: var(--panel);
+  backdrop-filter: blur(12px);
+}
+
+.panel-heading h2,
+.dialog-head h2 {
+  margin: 0;
+  font-size: clamp(1.1rem, 3vw, 1.35rem);
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 520px;
+}
+
+th,
+td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.78rem 0.45rem;
+  text-align: left;
+}
+
+th {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+td {
+  font-weight: 800;
+}
+
+.role-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.role-dot {
+  width: 0.68rem;
+  height: 0.68rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--role-color, var(--gold));
+  box-shadow: 0 0 12px var(--role-color, var(--gold));
+}
+
+.forecast-list {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.forecast-item {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.forecast-item div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.forecast-track {
+  overflow: hidden;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.forecast-track span {
+  display: block;
+  width: var(--chance, 0%);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--role-color, var(--gold)), var(--cyan));
+}
+
+.combined-box {
+  margin-top: 1rem;
+  border: 1px solid rgba(244, 201, 93, 0.22);
+  border-radius: 8px;
+  padding: 0.9rem;
+  background: rgba(244, 201, 93, 0.08);
+}
+
+.combined-box span,
+.combined-box small {
+  color: var(--muted);
+}
+
+.combined-box strong {
+  color: var(--gold);
+  font-size: 1.35rem;
+}
+
+.history-list {
+  display: grid;
+  gap: 0.55rem;
+  min-height: 220px;
+  max-height: 320px;
+  margin: 1rem 0;
+  padding-left: 1.2rem;
+  overflow: auto;
+}
+
+.history-list li {
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  color: #f5e6d6;
+  line-height: 1.55;
+}
+
+.history-list strong {
+  color: var(--gold);
+}
+
+.app-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem 1rem;
+  width: min(1220px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 0 0 2rem;
+  font-size: 0.82rem;
+}
+
+.settings-dialog {
+  width: min(720px, calc(100% - 2rem));
+  border-color: rgba(244, 201, 93, 0.28);
+  padding: 0;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(207, 49, 72, 0.22), transparent 18rem),
+    var(--panel-strong);
+  color: var(--text);
+}
+
+.settings-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.68);
+  backdrop-filter: blur(4px);
+}
+
+.settings-dialog form {
+  padding: 1rem;
+}
+
+.dialog-head,
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dialog-note {
+  margin: 1rem 0;
+  line-height: 1.7;
+}
+
+.settings-rows {
+  display: grid;
+  gap: 0.65rem;
+  max-height: min(58vh, 560px);
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
+.settings-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 1fr) minmax(120px, 180px);
+  gap: 0.85rem;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.settings-row label {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: 0.5rem;
+  font-weight: 900;
+}
+
+.settings-row input {
+  text-align: right;
+}
+
+.dialog-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.flash {
+  animation: flash 500ms ease;
+}
+
+@keyframes flash {
+  0%,
+  100% {
+    filter: none;
+  }
+
+  45% {
+    filter: brightness(1.35) saturate(1.35);
+  }
+}
+
+@media (max-width: 980px) {
+  .judge-hero {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .hero-copy {
+    max-width: none;
+  }
+
+  .target-selector {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .control-grid,
+  .panel-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-header {
+    align-items: flex-start;
+  }
+
+  .brand small {
+    display: none;
+  }
+
+  .line-button,
+  .primary-button {
+    padding-inline: 0.75rem;
+  }
+
+  main {
+    width: min(100% - 1rem, 1220px);
+  }
+
+  .judge-hero {
+    padding-top: 1rem;
+  }
+
+  h1 {
+    font-size: clamp(3rem, 17vw, 4.8rem);
+  }
+
+  .target-selector {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .range-control,
+  .number-control {
+    grid-template-columns: 1fr;
+  }
+
+  .range-control strong {
+    text-align: left;
+  }
+
+  .stats-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+  }
+
+  .settings-row {
+    grid-template-columns: 1fr;
+  }
+
+  .dialog-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .dialog-actions button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+    </style>
+  </head>
+  <body>
+    <canvas id="noteCanvas" aria-hidden="true"></canvas>
+
+    <header class="app-header" aria-label="アプリヘッダー">
+      <a class="brand" href="./" aria-label="小役リズムジャッジ ホーム">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9Ikp1ZGdlIGVtYmxlbSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIyMiIgeDI9IjEwNiIgeTE9IjE4IiB5Mj0iMTEyIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+CiAgICAgIDxzdG9wIHN0b3AtY29sb3I9IiNmNGM5NWQiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIuNDQiIHN0b3AtY29sb3I9IiNmZjlmNDMiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjY2YzMTQ4Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJjIiB4MT0iMzAiIHgyPSIxMDQiIHkxPSIxMDIiIHkyPSIyOCIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPgogICAgICA8c3RvcCBzdG9wLWNvbG9yPSIjNTZkNmQ2Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2ZmZjdlOCIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPGNpcmNsZSBjeD0iNjQiIGN5PSI2NCIgcj0iNTgiIGZpbGw9IiMxMDBiMTAiIHN0cm9rZT0idXJsKCNnKSIgc3Ryb2tlLXdpZHRoPSI2Ii8+CiAgPGNpcmNsZSBjeD0iNjQiIGN5PSI2NCIgcj0iNDIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2Y0Yzk1ZCIgc3Ryb2tlLW9wYWNpdHk9Ii4zNCIgc3Ryb2tlLXdpZHRoPSI0Ii8+CiAgPHBhdGggZmlsbD0idXJsKCNnKSIgZD0iTTYyIDE4aDZsNSAyNiAyNiA1djZMNzMgNjBsLTUgNTBoLTZsLTUtNTAtMjgtNXYtNmwyOC01eiIvPgogIDxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNjKSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2Utd2lkdGg9IjciIGQ9Ik0zOSA4NGMxNyAxMyAzOSAxMiA1My00Ii8+CiAgPHBhdGggZmlsbD0iI2ZmZjdlOCIgZD0iTTQ1IDM5YzgtNyAyMi03IDMxIDBsLTUgOGMtNi00LTE0LTQtMjEgMHoiLz4KPC9zdmc+Cg==" alt="" width="44" height="44" />
+        <span>
+          <strong>TACT RHYTHM</strong>
+          <small>小役リズムジャッジ</small>
+        </span>
+      </a>
+
+      <div class="header-actions">
+        <button class="icon-button" id="soundButton" type="button" aria-label="サウンド切替" title="サウンド切替">
+          ♪
+        </button>
+        <button class="line-button" id="settingsButton" type="button">確率編集</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="judge-hero" aria-labelledby="heroTitle">
+        <div class="hero-copy">
+          <p class="kicker">OCCULT MODE / STATIC PAGE</p>
+          <h1 id="heroTitle">REWARD JUDGE</h1>
+          <p class="hero-lead">
+            子役確率をリズムに変換して、押しどころを体感する練習ツールです。
+            実機の抽選や出玉には影響しません。
+          </p>
+          <div class="hero-alert" role="note">
+            初期値は編集前提の暫定プリセットです。公開値を確認したら「確率編集」から差し替えてください。
+          </div>
+        </div>
+
+        <div class="judge-board" aria-label="ジャッジ盤面">
+          <div class="board-topline">
+            <span id="judgeMode">TACT SYNC</span>
+            <strong id="targetChance">1/86.1</strong>
+          </div>
+
+          <div class="judge-wheel" id="judgeWheel">
+            <div class="target-aura" id="targetAura"></div>
+            <div class="wheel-rings">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <div class="wheel-needle" id="wheelNeedle"></div>
+            <div class="wheel-core">
+              <span id="roleIcon">♬</span>
+              <strong id="roleName">スイカ</strong>
+              <small id="roleTempo">120 BPM</small>
+            </div>
+          </div>
+
+          <button class="judge-button" id="judgeButton" type="button">JUDGE</button>
+
+          <div class="result-stage" aria-live="polite">
+            <span id="gradeText">READY</span>
+            <strong id="drawText">狙いを合わせて開始</strong>
+          </div>
+
+          <div class="phase-meter" aria-label="リズムゲージ">
+            <div class="phase-window" id="phaseWindow"></div>
+            <div class="phase-fill" id="phaseFill"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="control-band" aria-label="操作パネル">
+        <div class="target-selector" id="roleSelector" role="radiogroup" aria-label="狙う子役"></div>
+
+        <div class="control-grid">
+          <label class="range-control">
+            <span>BPM</span>
+            <input id="tempoInput" type="range" min="72" max="184" value="120" />
+            <strong id="tempoValue">120</strong>
+          </label>
+
+          <label class="range-control">
+            <span>共鳴幅</span>
+            <input id="windowInput" type="range" min="60" max="160" value="100" />
+            <strong id="windowValue">100%</strong>
+          </label>
+
+          <label class="number-control">
+            <span>計算G数</span>
+            <input id="gamesInput" type="number" min="1" max="9999" step="1" value="100" />
+          </label>
+        </div>
+
+        <div class="stats-strip" aria-label="成績">
+          <div>
+            <span>試行</span>
+            <strong id="statGames">0</strong>
+          </div>
+          <div>
+            <span>成立</span>
+            <strong id="statHits">0</strong>
+          </div>
+          <div>
+            <span>PERFECT</span>
+            <strong id="statPerfect">0</strong>
+          </div>
+          <div>
+            <span>連続</span>
+            <strong id="statStreak">0</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel-grid" aria-label="データパネル">
+        <article class="panel probability-panel">
+          <div class="panel-heading">
+            <p>PROBABILITY</p>
+            <h2>小役テーブル</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>子役</th>
+                  <th>確率</th>
+                  <th>期待回数</th>
+                  <th>期間内1回以上</th>
+                </tr>
+              </thead>
+              <tbody id="probabilityRows"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="panel expectation-panel">
+          <div class="panel-heading">
+            <p>FORECAST</p>
+            <h2>狙い目メーター</h2>
+          </div>
+          <div id="forecastList" class="forecast-list"></div>
+          <div class="combined-box">
+            <span>レア役合算</span>
+            <strong id="rareCombined">1/--</strong>
+            <small id="rareChance">--</small>
+          </div>
+        </article>
+
+        <article class="panel history-panel">
+          <div class="panel-heading">
+            <p>LOG</p>
+            <h2>ジャッジ履歴</h2>
+          </div>
+          <ol id="historyList" class="history-list">
+            <li>まだ履歴がありません</li>
+          </ol>
+          <button class="line-button danger" id="resetStatsButton" type="button">履歴リセット</button>
+        </article>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <span>GitHub Pages ready</span>
+      <span>確率データはブラウザに保存されます</span>
+    </footer>
+
+    <dialog class="settings-dialog" id="settingsDialog">
+      <form method="dialog" id="settingsForm">
+        <div class="dialog-head">
+          <div>
+            <p>DATA EDIT</p>
+            <h2>子役確率を編集</h2>
+          </div>
+          <button class="icon-button" id="closeSettingsButton" type="button" aria-label="閉じる" title="閉じる">×</button>
+        </div>
+
+        <p class="dialog-note">
+          分母だけを入力します。例: 1/86.1なら「86.1」。公開値を入れると画面全体のリズムと期待値が更新されます。
+        </p>
+
+        <div class="settings-rows" id="settingsRows"></div>
+
+        <div class="dialog-actions">
+          <button class="line-button danger" id="resetProbabilitiesButton" type="button">初期値へ戻す</button>
+          <button class="line-button" id="cancelSettingsButton" type="button">キャンセル</button>
+          <button class="primary-button" id="saveSettingsButton" type="submit">保存</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script>
+const STORAGE_KEY = "tact-opus-koyaku-probabilities";
+const SELECTED_KEY = "tact-opus-selected-role";
+
+const DEFAULT_ROLES = [
+  { id: "replay", name: "リプレイ", denom: 7.3, color: "#56d6d6", icon: "♩", rare: false },
+  { id: "bell", name: "ベル", denom: 8.2, color: "#f4c95d", icon: "◆", rare: false },
+  { id: "suika", name: "スイカ", denom: 86.1, color: "#79d278", icon: "▲", rare: true },
+  { id: "weakCherry", name: "弱チェリー", denom: 99.9, color: "#ff7190", icon: "♪", rare: true },
+  { id: "chance", name: "チャンス目", denom: 199.8, color: "#ff9f43", icon: "✦", rare: true },
+  { id: "strongCherry", name: "強チェリー", denom: 399.6, color: "#ff496c", icon: "♬", rare: true },
+];
+
+const $ = (selector) => document.querySelector(selector);
+
+const elements = {
+  roleSelector: $("#roleSelector"),
+  probabilityRows: $("#probabilityRows"),
+  forecastList: $("#forecastList"),
+  rareCombined: $("#rareCombined"),
+  rareChance: $("#rareChance"),
+  targetChance: $("#targetChance"),
+  roleIcon: $("#roleIcon"),
+  roleName: $("#roleName"),
+  roleTempo: $("#roleTempo"),
+  tempoInput: $("#tempoInput"),
+  tempoValue: $("#tempoValue"),
+  windowInput: $("#windowInput"),
+  windowValue: $("#windowValue"),
+  gamesInput: $("#gamesInput"),
+  judgeButton: $("#judgeButton"),
+  wheelNeedle: $("#wheelNeedle"),
+  targetAura: $("#targetAura"),
+  phaseWindow: $("#phaseWindow"),
+  phaseFill: $("#phaseFill"),
+  gradeText: $("#gradeText"),
+  drawText: $("#drawText"),
+  statGames: $("#statGames"),
+  statHits: $("#statHits"),
+  statPerfect: $("#statPerfect"),
+  statStreak: $("#statStreak"),
+  historyList: $("#historyList"),
+  resetStatsButton: $("#resetStatsButton"),
+  settingsButton: $("#settingsButton"),
+  settingsDialog: $("#settingsDialog"),
+  settingsRows: $("#settingsRows"),
+  settingsForm: $("#settingsForm"),
+  closeSettingsButton: $("#closeSettingsButton"),
+  cancelSettingsButton: $("#cancelSettingsButton"),
+  resetProbabilitiesButton: $("#resetProbabilitiesButton"),
+  soundButton: $("#soundButton"),
+  noteCanvas: $("#noteCanvas"),
+};
+
+let roles = loadRoles();
+let selectedId = localStorage.getItem(SELECTED_KEY) || "suika";
+let stats = { games: 0, hits: 0, perfect: 0, streak: 0 };
+let history = [];
+let startedAt = performance.now();
+let lastPhase = 0;
+let audioOn = false;
+let audioContext = null;
+let particles = [];
+
+function loadRoles() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (!Array.isArray(stored)) return cloneRoles(DEFAULT_ROLES);
+    return DEFAULT_ROLES.map((role) => {
+      const saved = stored.find((item) => item.id === role.id);
+      return saved && Number.isFinite(Number(saved.denom))
+        ? { ...role, denom: clamp(Number(saved.denom), 1.1, 9999) }
+        : { ...role };
+    });
+  } catch {
+    return cloneRoles(DEFAULT_ROLES);
+  }
+}
+
+function cloneRoles(value) {
+  return value.map((role) => ({ ...role }));
+}
+
+function saveRoles() {
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(roles.map(({ id, denom }) => ({ id, denom }))),
+  );
+}
+
+function getSelectedRole() {
+  return roles.find((role) => role.id === selectedId) || roles[0];
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function probability(role) {
+  return 1 / role.denom;
+}
+
+function formatDenom(denom) {
+  const rounded = Number(denom).toFixed(denom >= 100 ? 1 : 1);
+  return `1/${rounded.replace(/\.0$/, "")}`;
+}
+
+function formatPercent(value, digits = 1) {
+  return `${(value * 100).toFixed(digits)}%`;
+}
+
+function cycleMs(role) {
+  const bpm = Number(elements.tempoInput.value);
+  const beatMs = 60000 / bpm;
+  const beats = clamp(Math.log2(role.denom) * 1.28, 2.8, 10.5);
+  return beatMs * beats;
+}
+
+function targetPhase(role) {
+  const raw = Math.sin(role.denom * 12.9898 + role.name.length * 78.233) * 43758.5453;
+  const frac = raw - Math.floor(raw);
+  return 0.18 + frac * 0.64;
+}
+
+function targetWidth(role) {
+  const base = 0.17 - Math.log10(role.denom) * 0.036;
+  const scale = Number(elements.windowInput.value) / 100;
+  return clamp(base * scale, 0.035, 0.18);
+}
+
+function circularDistance(a, b) {
+  const diff = Math.abs(a - b);
+  return Math.min(diff, 1 - diff);
+}
+
+function signedPhaseDistance(phase, target) {
+  let diff = phase - target;
+  if (diff > 0.5) diff -= 1;
+  if (diff < -0.5) diff += 1;
+  return diff;
+}
+
+function renderRoleSelector() {
+  elements.roleSelector.innerHTML = roles
+    .map(
+      (role) => `
+        <button
+          class="role-chip"
+          type="button"
+          role="radio"
+          aria-checked="${role.id === selectedId}"
+          data-role-id="${role.id}"
+          style="--role-color:${role.color}"
+        >
+          <strong>${role.icon} ${role.name}</strong>
+          <span>${formatDenom(role.denom)}</span>
+        </button>
+      `,
+    )
+    .join("");
+}
+
+function renderProbabilityTable() {
+  const games = Number(elements.gamesInput.value) || 100;
+  elements.probabilityRows.innerHTML = roles
+    .map((role) => {
+      const expected = games / role.denom;
+      const chance = 1 - (1 - probability(role)) ** games;
+      return `
+        <tr>
+          <td>
+            <span class="role-cell">
+              <span class="role-dot" style="--role-color:${role.color}"></span>
+              ${role.name}
+            </span>
+          </td>
+          <td>${formatDenom(role.denom)}</td>
+          <td>${expected.toFixed(2)}回</td>
+          <td>${formatPercent(chance)}</td>
+        </tr>
+      `;
+    })
+    .join("");
+}
+
+function renderForecast() {
+  const games = clamp(Number(elements.gamesInput.value) || 100, 1, 9999);
+  const selected = getSelectedRole();
+  const visibleRoles = [selected, ...roles.filter((role) => role.id !== selected.id && role.rare)].slice(0, 4);
+
+  elements.forecastList.innerHTML = visibleRoles
+    .map((role) => {
+      const chance = 1 - (1 - probability(role)) ** games;
+      return `
+        <div class="forecast-item" style="--role-color:${role.color}">
+          <div>
+            <strong>${role.icon} ${role.name}</strong>
+            <span>${formatPercent(chance)}</span>
+          </div>
+          <span class="forecast-track" aria-hidden="true">
+            <span style="--chance:${Math.min(chance * 100, 100).toFixed(1)}%"></span>
+          </span>
+        </div>
+      `;
+    })
+    .join("");
+
+  const rareTotal = roles.filter((role) => role.rare).reduce((sum, role) => sum + probability(role), 0);
+  const combinedDenom = rareTotal > 0 ? 1 / rareTotal : 0;
+  const combinedChance = rareTotal > 0 ? 1 - (1 - rareTotal) ** games : 0;
+  elements.rareCombined.textContent = combinedDenom ? formatDenom(combinedDenom) : "1/--";
+  elements.rareChance.textContent = `${games}G以内 ${formatPercent(combinedChance)}`;
+}
+
+function renderSettingsRows() {
+  elements.settingsRows.innerHTML = roles
+    .map(
+      (role) => `
+        <div class="settings-row">
+          <label for="denom-${role.id}">
+            <span class="role-dot" style="--role-color:${role.color}"></span>
+            ${role.name}
+          </label>
+          <input
+            id="denom-${role.id}"
+            name="${role.id}"
+            type="number"
+            inputmode="decimal"
+            min="1.1"
+            max="9999"
+            step="0.1"
+            value="${role.denom}"
+          />
+        </div>
+      `,
+    )
+    .join("");
+}
+
+function renderSelectedRole() {
+  const role = getSelectedRole();
+  elements.targetChance.textContent = formatDenom(role.denom);
+  elements.roleIcon.textContent = role.icon;
+  elements.roleName.textContent = role.name;
+  elements.roleTempo.textContent = `${elements.tempoInput.value} BPM`;
+  elements.targetAura.style.background = targetAuraGradient(role);
+  elements.targetAura.style.filter = `drop-shadow(0 0 18px ${role.color})`;
+  elements.judgeButton.style.borderColor = role.color;
+  renderRoleSelector();
+  renderForecast();
+}
+
+function targetAuraGradient(role) {
+  const target = targetPhase(role);
+  const width = targetWidth(role);
+  const start = (target - width / 2) * 360;
+  const mid = target * 360;
+  const end = (target + width / 2) * 360;
+  return `conic-gradient(from 0deg, transparent 0deg, transparent ${start}deg, ${role.color} ${mid}deg, transparent ${end}deg, transparent 360deg)`;
+}
+
+function renderStats() {
+  elements.statGames.textContent = stats.games;
+  elements.statHits.textContent = stats.hits;
+  elements.statPerfect.textContent = stats.perfect;
+  elements.statStreak.textContent = stats.streak;
+}
+
+function renderHistory() {
+  if (!history.length) {
+    elements.historyList.innerHTML = "<li>まだ履歴がありません</li>";
+    return;
+  }
+
+  elements.historyList.innerHTML = history
+    .slice(0, 12)
+    .map(
+      (item) => `
+        <li>
+          <strong>${item.grade}</strong>
+          ${item.role} / ${item.draw}
+          <br />
+          <small>${item.phaseText}</small>
+        </li>
+      `,
+    )
+    .join("");
+}
+
+function animationLoop(now) {
+  const role = getSelectedRole();
+  const phase = ((now - startedAt) % cycleMs(role)) / cycleMs(role);
+  const target = targetPhase(role);
+  const width = targetWidth(role);
+  lastPhase = phase;
+
+  elements.wheelNeedle.style.transform = `rotate(${phase * 360}deg)`;
+  elements.phaseFill.style.width = `${phase * 100}%`;
+  elements.phaseWindow.style.left = `${clamp((target - width / 2) * 100, 0, 100)}%`;
+  elements.phaseWindow.style.width = `${width * 100}%`;
+
+  requestAnimationFrame(animationLoop);
+}
+
+function judge() {
+  const role = getSelectedRole();
+  const target = targetPhase(role);
+  const width = targetWidth(role);
+  const distance = circularDistance(lastPhase, target);
+  const signed = signedPhaseDistance(lastPhase, target);
+
+  let grade = "MISS";
+  let points = 0;
+  if (distance <= width * 0.18) {
+    grade = "PERFECT";
+    points = 3;
+  } else if (distance <= width * 0.42) {
+    grade = "GREAT";
+    points = 2;
+  } else if (distance <= width * 0.68) {
+    grade = "GOOD";
+    points = 1;
+  } else {
+    grade = signed < 0 ? "EARLY" : "LATE";
+  }
+
+  const hit = Math.random() < probability(role);
+  const draw = hit ? `${role.name}成立` : "不発";
+  stats.games += 1;
+  stats.hits += hit ? 1 : 0;
+  stats.perfect += grade === "PERFECT" ? 1 : 0;
+  stats.streak = points > 0 ? stats.streak + 1 : 0;
+
+  elements.gradeText.textContent = grade;
+  elements.drawText.textContent = draw;
+  elements.drawText.style.color = hit ? role.color : "";
+  elements.gradeText.style.color = grade === "PERFECT" ? "#f4c95d" : points > 0 ? "#56d6d6" : "#ff7190";
+  elements.judgeButton.classList.remove("flash");
+  void elements.judgeButton.offsetWidth;
+  elements.judgeButton.classList.add("flash");
+
+  history.unshift({
+    grade,
+    role: role.name,
+    draw,
+    phaseText: `ズレ ${Math.round(distance * 1000) / 10}% / ${formatDenom(role.denom)}`,
+  });
+
+  if (audioOn) {
+    playBeep(hit ? 740 : points > 0 ? 520 : 220, hit ? 0.18 : 0.1);
+  }
+
+  renderStats();
+  renderHistory();
+}
+
+function playBeep(frequency, duration) {
+  const AudioEngine = window.AudioContext || window.webkitAudioContext;
+  if (!AudioEngine) return;
+  if (!audioContext) audioContext = new AudioEngine();
+  const oscillator = audioContext.createOscillator();
+  const gain = audioContext.createGain();
+  oscillator.frequency.value = frequency;
+  oscillator.type = "triangle";
+  gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.08, audioContext.currentTime + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
+  oscillator.connect(gain).connect(audioContext.destination);
+  oscillator.start();
+  oscillator.stop(audioContext.currentTime + duration + 0.02);
+}
+
+function resetStats() {
+  stats = { games: 0, hits: 0, perfect: 0, streak: 0 };
+  history = [];
+  elements.gradeText.textContent = "READY";
+  elements.drawText.textContent = "狙いを合わせて開始";
+  elements.drawText.style.color = "";
+  renderStats();
+  renderHistory();
+}
+
+function openSettings() {
+  renderSettingsRows();
+  if (typeof elements.settingsDialog.showModal === "function") {
+    elements.settingsDialog.showModal();
+  } else {
+    elements.settingsDialog.setAttribute("open", "");
+  }
+}
+
+function closeSettings() {
+  if (typeof elements.settingsDialog.close === "function") {
+    elements.settingsDialog.close();
+  } else {
+    elements.settingsDialog.removeAttribute("open");
+  }
+}
+
+function saveSettings(event) {
+  event.preventDefault();
+  const formData = new FormData(elements.settingsForm);
+  roles = roles.map((role) => {
+    const value = clamp(Number(formData.get(role.id)), 1.1, 9999);
+    return Number.isFinite(value) ? { ...role, denom: Math.round(value * 10) / 10 } : role;
+  });
+  saveRoles();
+  closeSettings();
+  renderAll();
+}
+
+function resetProbabilities() {
+  roles = cloneRoles(DEFAULT_ROLES);
+  saveRoles();
+  renderSettingsRows();
+  renderAll();
+}
+
+function renderAll() {
+  renderSelectedRole();
+  renderProbabilityTable();
+  renderForecast();
+  renderStats();
+  renderHistory();
+}
+
+function setupCanvas() {
+  const canvas = elements.noteCanvas;
+  const ctx = canvas.getContext("2d");
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  function resize() {
+    canvas.width = Math.floor(window.innerWidth * dpr);
+    canvas.height = Math.floor(window.innerHeight * dpr);
+    canvas.style.width = `${window.innerWidth}px`;
+    canvas.style.height = `${window.innerHeight}px`;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    particles = Array.from({ length: Math.min(54, Math.floor(window.innerWidth / 18)) }, createParticle);
+  }
+
+  function createParticle() {
+    const marks = ["♪", "♩", "♬", "✦"];
+    return {
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      speed: 0.16 + Math.random() * 0.46,
+      size: 13 + Math.random() * 18,
+      mark: marks[Math.floor(Math.random() * marks.length)],
+      alpha: 0.12 + Math.random() * 0.28,
+      drift: -0.25 + Math.random() * 0.5,
+    };
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    ctx.font = "20px serif";
+    particles.forEach((particle) => {
+      particle.y -= particle.speed;
+      particle.x += particle.drift;
+      if (particle.y < -40 || particle.x < -40 || particle.x > window.innerWidth + 40) {
+        Object.assign(particle, createParticle(), { y: window.innerHeight + 30 });
+      }
+      ctx.globalAlpha = particle.alpha;
+      ctx.fillStyle = particle.mark === "✦" ? "#56d6d6" : "#f4c95d";
+      ctx.font = `${particle.size}px serif`;
+      ctx.fillText(particle.mark, particle.x, particle.y);
+    });
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(draw);
+  }
+
+  resize();
+  draw();
+  window.addEventListener("resize", resize);
+}
+
+elements.roleSelector.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-role-id]");
+  if (!button) return;
+  selectedId = button.dataset.roleId;
+  localStorage.setItem(SELECTED_KEY, selectedId);
+  startedAt = performance.now();
+  renderSelectedRole();
+});
+
+elements.tempoInput.addEventListener("input", () => {
+  elements.tempoValue.textContent = elements.tempoInput.value;
+  startedAt = performance.now();
+  renderSelectedRole();
+});
+
+elements.windowInput.addEventListener("input", () => {
+  elements.windowValue.textContent = `${elements.windowInput.value}%`;
+  renderSelectedRole();
+});
+
+elements.gamesInput.addEventListener("input", () => {
+  renderProbabilityTable();
+  renderForecast();
+});
+
+elements.judgeButton.addEventListener("click", judge);
+elements.resetStatsButton.addEventListener("click", resetStats);
+elements.settingsButton.addEventListener("click", openSettings);
+elements.closeSettingsButton.addEventListener("click", closeSettings);
+elements.cancelSettingsButton.addEventListener("click", closeSettings);
+elements.settingsForm.addEventListener("submit", saveSettings);
+elements.resetProbabilitiesButton.addEventListener("click", resetProbabilities);
+elements.soundButton.addEventListener("click", () => {
+  audioOn = !audioOn;
+  elements.soundButton.setAttribute("aria-pressed", String(audioOn));
+  elements.soundButton.textContent = audioOn ? "♫" : "♪";
+  if (audioOn) playBeep(660, 0.08);
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.code !== "Space" || event.target.matches("input, button, textarea, select")) return;
+  event.preventDefault();
+  judge();
+});
+
+renderAll();
+setupCanvas();
+requestAnimationFrame(animationLoop);
+
+    </script>
+  </body>
+</html>
