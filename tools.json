@@ -17,6 +17,12 @@
     "description": "スマスロ takt op.Destiny の乱数ずらしと、報酬CHANCE・報酬JUDGEの3G STを体感できる練習ツール。",
     "category": "スロット"
   },
+  "kanokari-zurashi.html": {
+    "name": "恋カノ乱数トレーナー | 彼女、お借りします",
+    "icon": "💗",
+    "description": "Lパチスロ 彼女、お借りしますの小役確率に合わせた乱数ずらし、小役変換、1GレンCHANCE練習ツール。",
+    "category": "スロット"
+  },
   "game.html": {
     "name": "10-in-1 Web Arcade",
     "icon": "📱",
