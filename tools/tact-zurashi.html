@@ -1,0 +1,909 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta name="theme-color" content="#08070b" />
+    <meta name="icon" content="🎼" />
+    <meta
+      name="description"
+      content="スマスロ takt op.Destiny の小役合算確率を待機秒数に見立てた、オカルト乱数ずらしタイマー。"
+    />
+    <meta name="category" content="スロット" />
+    <title>運命乱数ずらし | takt op. Destiny</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+        --bg: #08070b;
+        --panel: rgba(18, 15, 20, 0.82);
+        --paper: #fff4df;
+        --muted: #b9a99f;
+        --red: #df334c;
+        --red-dark: #7b0f25;
+        --gold: #f0c66e;
+        --cyan: #6fd7db;
+        --purple: #a76ed4;
+        --mode: var(--red);
+        --mode-soft: rgba(223, 51, 76, 0.24);
+        --progress: 0deg;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        min-height: 100%;
+        margin: 0;
+        background: var(--bg);
+        overscroll-behavior: none;
+      }
+
+      body {
+        min-height: 100svh;
+        overflow-x: hidden;
+        color: var(--paper);
+        background:
+          radial-gradient(circle at 15% 0%, var(--mode-soft), transparent 30rem),
+          radial-gradient(circle at 95% 72%, rgba(90, 192, 202, 0.12), transparent 28rem),
+          linear-gradient(150deg, #09080c 0%, #171016 54%, #07090b 100%);
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 500ms ease;
+      }
+
+      body::before {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        content: "";
+        opacity: 0.42;
+        background:
+          linear-gradient(112deg, transparent 0 46%, rgba(240, 198, 110, 0.12) 46.1% 46.3%, transparent 46.4% 100%),
+          repeating-linear-gradient(
+            0deg,
+            transparent 0 27px,
+            rgba(255, 244, 223, 0.06) 28px 29px,
+            transparent 30px 38px
+          );
+        mask-image: linear-gradient(to bottom, black, transparent 85%);
+      }
+
+      button {
+        font: inherit;
+      }
+
+      .app {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        width: min(100%, 620px);
+        min-height: 100svh;
+        margin: 0 auto;
+        padding: max(16px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
+        grid-template-rows: auto auto minmax(330px, 1fr) auto auto;
+        gap: 14px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .brand-mark {
+        position: relative;
+        display: grid;
+        width: 42px;
+        height: 42px;
+        flex: 0 0 auto;
+        place-items: center;
+        border: 1px solid rgba(240, 198, 110, 0.52);
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(223, 51, 76, 0.32), transparent 68%);
+        color: var(--gold);
+        font-family: Georgia, serif;
+        font-size: 27px;
+        box-shadow: 0 0 24px rgba(240, 198, 110, 0.12);
+      }
+
+      .brand-mark::after {
+        position: absolute;
+        width: 3px;
+        height: 50px;
+        border-radius: 4px;
+        background: linear-gradient(var(--paper), var(--red));
+        content: "";
+        transform: rotate(36deg);
+      }
+
+      .brand-copy {
+        min-width: 0;
+      }
+
+      .eyebrow,
+      .brand-copy small,
+      .mode-button span,
+      .state-kicker,
+      .metric span,
+      .probability-head span,
+      .fineprint {
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+      }
+
+      .brand-copy strong {
+        display: block;
+        overflow: hidden;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 17px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .brand-copy small {
+        display: block;
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 9px;
+      }
+
+      .sound-button {
+        display: grid;
+        width: 42px;
+        height: 42px;
+        flex: 0 0 auto;
+        place-items: center;
+        border: 1px solid rgba(240, 198, 110, 0.3);
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--muted);
+        cursor: pointer;
+      }
+
+      .sound-button[aria-pressed="true"] {
+        border-color: var(--gold);
+        color: var(--gold);
+        box-shadow: 0 0 20px rgba(240, 198, 110, 0.14);
+      }
+
+      .mode-switch {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 7px;
+        padding: 5px;
+        border: 1px solid rgba(255, 244, 223, 0.12);
+        border-radius: 16px;
+        background: rgba(0, 0, 0, 0.26);
+        box-shadow: inset 0 1px rgba(255, 255, 255, 0.03);
+      }
+
+      .mode-button {
+        min-width: 0;
+        border: 1px solid transparent;
+        border-radius: 11px;
+        padding: 9px 8px 8px;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        transition: 180ms ease;
+      }
+
+      .mode-button span {
+        display: block;
+        overflow: hidden;
+        font-size: 9px;
+        font-weight: 800;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .mode-button strong {
+        display: block;
+        margin-top: 2px;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 18px;
+      }
+
+      .mode-button[aria-pressed="true"] {
+        border-color: color-mix(in srgb, var(--mode) 54%, transparent);
+        background: linear-gradient(135deg, color-mix(in srgb, var(--mode) 25%, transparent), rgba(255, 255, 255, 0.04));
+        color: var(--paper);
+        box-shadow: 0 0 22px var(--mode-soft);
+      }
+
+      .mode-button:disabled {
+        cursor: default;
+        opacity: 0.54;
+      }
+
+      .stage {
+        position: relative;
+        display: grid;
+        place-items: center;
+        min-height: 330px;
+      }
+
+      .staff-note {
+        position: absolute;
+        color: color-mix(in srgb, var(--mode) 44%, transparent);
+        font-family: Georgia, serif;
+        font-size: clamp(42px, 13vw, 72px);
+        filter: blur(0.2px);
+        pointer-events: none;
+        transition: color 500ms ease, transform 500ms ease;
+      }
+
+      .staff-note.one {
+        top: 9%;
+        left: 2%;
+        transform: rotate(-13deg);
+      }
+
+      .staff-note.two {
+        right: 3%;
+        bottom: 6%;
+        transform: rotate(10deg) scale(0.72);
+      }
+
+      .dial {
+        position: relative;
+        display: grid;
+        width: min(74vw, 310px);
+        aspect-ratio: 1;
+        place-items: center;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle, #161118 0 50%, transparent 50.5%),
+          conic-gradient(from -90deg, var(--mode) var(--progress), rgba(255, 244, 223, 0.09) 0);
+        box-shadow:
+          0 28px 70px rgba(0, 0, 0, 0.54),
+          0 0 44px var(--mode-soft),
+          inset 0 0 0 1px rgba(240, 198, 110, 0.12);
+        transition: box-shadow 300ms ease;
+      }
+
+      .dial::before,
+      .dial::after {
+        position: absolute;
+        inset: 8%;
+        border: 1px solid rgba(240, 198, 110, 0.23);
+        border-radius: 50%;
+        content: "";
+        pointer-events: none;
+      }
+
+      .dial::after {
+        inset: 14%;
+        border-color: rgba(255, 244, 223, 0.08);
+        border-style: dashed;
+      }
+
+      .ticks {
+        position: absolute;
+        inset: 2.7%;
+        border-radius: 50%;
+        opacity: 0.72;
+        background: repeating-conic-gradient(
+          from -1deg,
+          rgba(240, 198, 110, 0.44) 0deg 0.65deg,
+          transparent 0.7deg 15deg
+        );
+        mask: radial-gradient(circle, transparent 0 90%, black 90.5%);
+        pointer-events: none;
+      }
+
+      .main-button {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        width: 64%;
+        aspect-ratio: 1;
+        place-items: center;
+        border: 1px solid rgba(240, 198, 110, 0.44);
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 34% 27%, rgba(255, 255, 255, 0.17), transparent 24%),
+          linear-gradient(145deg, color-mix(in srgb, var(--mode) 84%, #21141b), #310b16 78%);
+        color: var(--paper);
+        cursor: pointer;
+        box-shadow:
+          0 12px 0 #12070b,
+          0 18px 36px rgba(0, 0, 0, 0.48),
+          inset 0 2px 0 rgba(255, 255, 255, 0.16),
+          inset 0 -10px 20px rgba(0, 0, 0, 0.26);
+        touch-action: manipulation;
+        transition: transform 100ms ease, box-shadow 100ms ease, background 300ms ease;
+      }
+
+      .main-button:active,
+      .app[data-state="waiting"] .main-button {
+        transform: translateY(8px);
+        box-shadow:
+          0 4px 0 #12070b,
+          0 10px 22px rgba(0, 0, 0, 0.4),
+          inset 0 2px 0 rgba(255, 255, 255, 0.12),
+          inset 0 -10px 20px rgba(0, 0, 0, 0.28);
+      }
+
+      .button-copy {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        align-content: center;
+        justify-items: center;
+        padding: 20px;
+        opacity: 0;
+        transform: scale(0.92);
+        transition: opacity 180ms ease, transform 180ms ease;
+      }
+
+      .button-copy strong {
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(28px, 8vw, 42px);
+        font-weight: 500;
+        line-height: 0.95;
+        letter-spacing: 0.05em;
+        text-shadow: 0 5px 18px rgba(0, 0, 0, 0.45);
+      }
+
+      .button-copy small {
+        margin-top: 10px;
+        color: rgba(255, 244, 223, 0.76);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.18em;
+      }
+
+      .app[data-state="idle"] .copy-idle,
+      .app[data-state="waiting"] .copy-waiting,
+      .app[data-state="ready"] .copy-ready {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      .app[data-state="ready"] .dial {
+        animation: ready-pulse 650ms ease-in-out infinite alternate;
+        box-shadow:
+          0 28px 70px rgba(0, 0, 0, 0.54),
+          0 0 68px color-mix(in srgb, var(--mode) 68%, transparent),
+          inset 0 0 0 2px var(--gold);
+      }
+
+      .app[data-state="ready"] .main-button {
+        background:
+          radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.38), transparent 26%),
+          linear-gradient(145deg, #f8df9c, var(--mode) 43%, #7b0f25 90%);
+      }
+
+      .app[data-state="ready"] .button-copy strong {
+        font-family: inherit;
+        font-size: clamp(35px, 10vw, 50px);
+        font-weight: 1000;
+      }
+
+      .status {
+        display: grid;
+        min-height: 78px;
+        align-content: center;
+        justify-items: center;
+        text-align: center;
+      }
+
+      .state-kicker {
+        margin: 0 0 5px;
+        color: var(--mode);
+        font-size: 10px;
+        font-weight: 900;
+        transition: color 300ms ease;
+      }
+
+      .state-title {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(23px, 6vw, 31px);
+        font-weight: 500;
+      }
+
+      .state-detail {
+        margin: 7px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .metrics {
+        display: grid;
+        width: 100%;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 7px;
+      }
+
+      .metric {
+        min-width: 0;
+        border: 1px solid rgba(255, 244, 223, 0.1);
+        border-radius: 12px;
+        padding: 9px 6px 8px;
+        background: rgba(255, 255, 255, 0.035);
+        text-align: center;
+      }
+
+      .metric span {
+        display: block;
+        overflow: hidden;
+        color: var(--muted);
+        font-size: 8px;
+        font-weight: 800;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .metric strong {
+        display: block;
+        margin-top: 4px;
+        color: var(--paper);
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 18px;
+        font-weight: 500;
+      }
+
+      .probability-card {
+        border: 1px solid rgba(240, 198, 110, 0.14);
+        border-radius: 16px;
+        padding: 12px;
+        background: var(--panel);
+        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(12px);
+      }
+
+      .probability-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 9px;
+      }
+
+      .probability-head span {
+        color: var(--gold);
+        font-size: 9px;
+        font-weight: 900;
+      }
+
+      .probability-head strong {
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 700;
+      }
+
+      .role-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .role-chip {
+        border: 1px solid rgba(255, 244, 223, 0.11);
+        border-radius: 999px;
+        padding: 5px 8px;
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--muted);
+        font-size: 10px;
+        white-space: nowrap;
+      }
+
+      .role-chip b {
+        margin-left: 3px;
+        color: var(--paper);
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 11px;
+        font-weight: 500;
+      }
+
+      .fineprint {
+        margin: 9px 3px 0;
+        color: #756a68;
+        font-size: 7px;
+        font-weight: 800;
+        line-height: 1.55;
+        text-align: center;
+      }
+
+      .flash {
+        animation: screen-flash 420ms ease-out;
+      }
+
+      @keyframes ready-pulse {
+        to {
+          transform: scale(1.025);
+        }
+      }
+
+      @keyframes screen-flash {
+        0% {
+          filter: brightness(2.1);
+        }
+        100% {
+          filter: brightness(1);
+        }
+      }
+
+      @media (min-width: 720px) and (min-height: 760px) {
+        .app {
+          padding-top: 24px;
+          padding-bottom: 24px;
+        }
+
+        .stage {
+          min-height: 360px;
+        }
+      }
+
+      @media (max-height: 730px) {
+        .app {
+          grid-template-rows: auto auto minmax(260px, 1fr) auto auto;
+          gap: 9px;
+          padding-top: 10px;
+          padding-bottom: 10px;
+        }
+
+        .brand-mark,
+        .sound-button {
+          width: 36px;
+          height: 36px;
+        }
+
+        .brand-mark {
+          font-size: 22px;
+        }
+
+        .brand-mark::after {
+          height: 43px;
+        }
+
+        .stage {
+          min-height: 260px;
+        }
+
+        .dial {
+          width: min(62vh, 280px);
+        }
+
+        .status {
+          min-height: 60px;
+        }
+
+        .state-detail {
+          margin-top: 4px;
+        }
+
+        .probability-card {
+          padding: 9px 10px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app" id="app" data-state="idle">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">𝄞</div>
+          <div class="brand-copy">
+            <strong>takt op. Destiny</strong>
+            <small>random shift conductor</small>
+          </div>
+        </div>
+        <button class="sound-button" id="soundButton" type="button" aria-label="サウンドをオンにする" aria-pressed="false">♪</button>
+      </header>
+
+      <div class="mode-switch" role="group" aria-label="内部状態を選択">
+        <button class="mode-button" type="button" data-mode="normal" aria-pressed="true">
+          <span>normal / mb2</span>
+          <strong>通常 1/4.1</strong>
+        </button>
+        <button class="mode-button" type="button" data-mode="meteorite" aria-pressed="false">
+          <span>black night / mb1</span>
+          <strong>黒夜隕鉄 1/2.5</strong>
+        </button>
+      </div>
+
+      <section class="stage" aria-label="乱数ずらし操作">
+        <span class="staff-note one" aria-hidden="true">♪</span>
+        <span class="staff-note two" aria-hidden="true">𝄢</span>
+        <div class="dial" id="dial">
+          <div class="ticks" aria-hidden="true"></div>
+          <button class="main-button" id="mainButton" type="button" aria-describedby="stateDetail">
+            <span class="button-copy copy-idle">
+              <strong>START</strong>
+              <small>touch to conduct</small>
+            </span>
+            <span class="button-copy copy-waiting">
+              <strong id="countdown">0.00</strong>
+              <small>touch to cancel</small>
+            </span>
+            <span class="button-copy copy-ready">
+              <strong>叩け!!</strong>
+              <small>lever on</small>
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <section class="status" aria-live="polite" aria-atomic="true">
+        <p class="state-kicker" id="stateKicker">CONDUCTOR READY</p>
+        <h1 class="state-title" id="stateTitle">運命の一音を指揮する</h1>
+        <p class="state-detail" id="stateDetail">中央のボタンで乱数ずらしを開始</p>
+      </section>
+
+      <section aria-label="待機データ">
+        <div class="metrics">
+          <div class="metric">
+            <span>base interval</span>
+            <strong id="baseMetric">4.10s</strong>
+          </div>
+          <div class="metric">
+            <span>random shift</span>
+            <strong id="shiftMetric">+0.00s</strong>
+          </div>
+          <div class="metric">
+            <span>total</span>
+            <strong id="totalMetric">4.10s</strong>
+          </div>
+        </div>
+
+        <div class="probability-card">
+          <div class="probability-head">
+            <span>small role probability</span>
+            <strong id="modeLabel">通常状態（MB2内部中）</strong>
+          </div>
+          <div class="role-list" id="roleList"></div>
+        </div>
+        <p class="fineprint">
+          小役合算の分母を秒数に見立てたオカルト演出です。実機の抽選・当選確率・出玉には影響しません。
+        </p>
+      </section>
+    </main>
+
+    <script>
+      const MODES = {
+        normal: {
+          label: "通常状態（MB2内部中）",
+          denominator: 4.1,
+          color: "#df334c",
+          soft: "rgba(223, 51, 76, 0.24)",
+          roles: [
+            ["リプレイ", "1/8.5"],
+            ["ベル", "1/10.5"],
+            ["弱チャンス目", "1/56.0"],
+            ["強チャンス目", "1/256.0"],
+            ["MB", "1/89.5"],
+          ],
+        },
+        meteorite: {
+          label: "黒夜隕鉄モード（MB1内部中）",
+          denominator: 2.5,
+          color: "#a76ed4",
+          soft: "rgba(167, 110, 212, 0.25)",
+          roles: [
+            ["リプレイ", "1/8.5"],
+            ["ベル", "1/180.0"],
+            ["弱チャンス目", "1/4.7"],
+            ["強チャンス目", "1/256.0"],
+            ["MB", "1/20.0"],
+          ],
+        },
+      };
+
+      const OCCULT_MESSAGES = [
+        "D2反応を解析中…",
+        "ムジカートとの位相を調整中…",
+        "運命の旋律を探索中…",
+        "黒夜隕鉄の波形を同期中…",
+        "乱数テーブルを再構成中…",
+        "コンダクター同期中…",
+      ];
+
+      const app = document.querySelector("#app");
+      const mainButton = document.querySelector("#mainButton");
+      const soundButton = document.querySelector("#soundButton");
+      const countdown = document.querySelector("#countdown");
+      const stateKicker = document.querySelector("#stateKicker");
+      const stateTitle = document.querySelector("#stateTitle");
+      const stateDetail = document.querySelector("#stateDetail");
+      const baseMetric = document.querySelector("#baseMetric");
+      const shiftMetric = document.querySelector("#shiftMetric");
+      const totalMetric = document.querySelector("#totalMetric");
+      const modeLabel = document.querySelector("#modeLabel");
+      const roleList = document.querySelector("#roleList");
+      const modeButtons = [...document.querySelectorAll("[data-mode]")];
+
+      let selectedMode = "normal";
+      let state = "idle";
+      let startedAt = 0;
+      let totalWait = 0;
+      let frameId = 0;
+      let messageTimer = 0;
+      let soundOn = false;
+      let audioContext = null;
+
+      function randomBetween(min, max) {
+        if (window.crypto?.getRandomValues) {
+          const value = new Uint32Array(1);
+          window.crypto.getRandomValues(value);
+          return min + (value[0] / 4294967296) * (max - min);
+        }
+        return min + Math.random() * (max - min);
+      }
+
+      function formatSeconds(milliseconds) {
+        return `${(milliseconds / 1000).toFixed(2)}s`;
+      }
+
+      function setState(nextState) {
+        state = nextState;
+        app.dataset.state = nextState;
+        modeButtons.forEach((button) => {
+          button.disabled = nextState !== "idle";
+        });
+      }
+
+      function renderMode() {
+        const mode = MODES[selectedMode];
+        document.documentElement.style.setProperty("--mode", mode.color);
+        document.documentElement.style.setProperty("--mode-soft", mode.soft);
+        document.documentElement.style.setProperty("--progress", "0deg");
+        modeButtons.forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.mode === selectedMode));
+        });
+        baseMetric.textContent = `${mode.denominator.toFixed(2)}s`;
+        totalMetric.textContent = `${mode.denominator.toFixed(2)}s`;
+        shiftMetric.textContent = "+0.00s";
+        modeLabel.textContent = mode.label;
+        roleList.innerHTML = mode.roles
+          .map(([name, probability]) => `<span class="role-chip">${name}<b>${probability}</b></span>`)
+          .join("");
+      }
+
+      function playTone(frequency, duration = 0.16, delay = 0) {
+        if (!soundOn) return;
+        const AudioEngine = window.AudioContext || window.webkitAudioContext;
+        if (!AudioEngine) return;
+        if (!audioContext) audioContext = new AudioEngine();
+        if (audioContext.state === "suspended") audioContext.resume();
+        const start = audioContext.currentTime + delay;
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        oscillator.type = "triangle";
+        oscillator.frequency.setValueAtTime(frequency, start);
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(0.075, start + 0.018);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+        oscillator.connect(gain).connect(audioContext.destination);
+        oscillator.start(start);
+        oscillator.stop(start + duration + 0.03);
+      }
+
+      function startWait() {
+        const mode = MODES[selectedMode];
+        const baseWait = mode.denominator * 1000;
+        const randomShift = randomBetween(100, 3000);
+        totalWait = baseWait + randomShift;
+        startedAt = performance.now();
+
+        setState("waiting");
+        baseMetric.textContent = formatSeconds(baseWait);
+        shiftMetric.textContent = `+${formatSeconds(randomShift)}`;
+        totalMetric.textContent = formatSeconds(totalWait);
+        stateKicker.textContent = "CONDUCTING / TOUCH TO CANCEL";
+        stateTitle.textContent = "旋律をずらしています";
+        stateDetail.textContent = OCCULT_MESSAGES[0];
+        playTone(220, 0.11);
+
+        let messageIndex = 0;
+        messageTimer = window.setInterval(() => {
+          messageIndex = (messageIndex + 1) % OCCULT_MESSAGES.length;
+          stateDetail.textContent = OCCULT_MESSAGES[messageIndex];
+        }, 780);
+
+        cancelAnimationFrame(frameId);
+        frameId = requestAnimationFrame(updateProgress);
+      }
+
+      function updateProgress(now) {
+        if (state !== "waiting") return;
+        const elapsed = now - startedAt;
+        const progress = Math.min(elapsed / totalWait, 1);
+        const remaining = Math.max(totalWait - elapsed, 0);
+        document.documentElement.style.setProperty("--progress", `${progress * 360}deg`);
+        countdown.textContent = (remaining / 1000).toFixed(2);
+
+        if (progress >= 1) {
+          triggerReady();
+          return;
+        }
+        frameId = requestAnimationFrame(updateProgress);
+      }
+
+      function triggerReady() {
+        clearInterval(messageTimer);
+        cancelAnimationFrame(frameId);
+        setState("ready");
+        document.documentElement.style.setProperty("--progress", "360deg");
+        stateKicker.textContent = "DESTINY TIMING";
+        stateTitle.textContent = "今、レバーオン！";
+        stateDetail.textContent = "運命の一音に合わせて叩け";
+        document.body.classList.remove("flash");
+        void document.body.offsetWidth;
+        document.body.classList.add("flash");
+        playTone(523.25, 0.16);
+        playTone(659.25, 0.18, 0.08);
+        playTone(783.99, 0.28, 0.16);
+        navigator.vibrate?.([80, 45, 140]);
+      }
+
+      function reset() {
+        clearInterval(messageTimer);
+        cancelAnimationFrame(frameId);
+        setState("idle");
+        document.documentElement.style.setProperty("--progress", "0deg");
+        countdown.textContent = "0.00";
+        stateKicker.textContent = "CONDUCTOR READY";
+        stateTitle.textContent = "運命の一音を指揮する";
+        stateDetail.textContent = "中央のボタンで乱数ずらしを開始";
+        renderMode();
+      }
+
+      function handleAction() {
+        if (state === "idle") {
+          startWait();
+        } else {
+          reset();
+        }
+      }
+
+      modeButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          if (state !== "idle") return;
+          selectedMode = button.dataset.mode;
+          renderMode();
+          playTone(selectedMode === "normal" ? 392 : 311.13, 0.12);
+        });
+      });
+
+      soundButton.addEventListener("click", () => {
+        soundOn = !soundOn;
+        soundButton.setAttribute("aria-pressed", String(soundOn));
+        soundButton.setAttribute("aria-label", soundOn ? "サウンドをオフにする" : "サウンドをオンにする");
+        if (soundOn) playTone(440, 0.12);
+      });
+
+      mainButton.addEventListener("click", handleAction);
+
+      renderMode();
+    </script>
+  </body>
+</html>

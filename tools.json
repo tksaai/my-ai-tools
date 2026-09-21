@@ -11,6 +11,12 @@
     "description": "スマスロ takt op. 風の小役オカルト体感トレーナー。子役確率を編集してリズム判定と期待値確認ができます。",
     "category": "アプリ"
   },
+  "tact-zurashi.html": {
+    "name": "運命乱数ずらし | takt op. Destiny",
+    "icon": "🎼",
+    "description": "スマスロ takt op.Destiny の小役合算確率を待機秒数に見立てた、オカルト乱数ずらしタイマー。",
+    "category": "スロット"
+  },
   "isekaru.html": {
     "name": "異世界乱数ずらし",
     "icon": "📱",
