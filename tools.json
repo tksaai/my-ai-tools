@@ -41,6 +41,12 @@
     "description": "生成AIで作成したツールです。",
     "category": "アプリ"
   },
+  "sao-yozora-zurashi.html": {
+    "name": "夜空乱数トレーナー | SAO Alicization",
+    "icon": "⚔️",
+    "description": "e ソードアート・オンライン アリシゼーション 夜空の大当り確率に合わせた乱数ずらしとRUSH体感ツール。",
+    "category": "パチンコ"
+  },
   "subscManeger.html": {
     "name": "My Subsc Manager",
     "icon": "📱",
