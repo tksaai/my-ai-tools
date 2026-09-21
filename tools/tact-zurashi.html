@@ -7,7 +7,7 @@
     <meta name="icon" content="🎼" />
     <meta
       name="description"
-      content="スマスロ takt op.Destiny の小役合算確率を待機秒数に見立てた、オカルト乱数ずらしタイマー。"
+      content="スマスロ takt op.Destiny の乱数ずらしと、報酬CHANCE・報酬JUDGEの3G STを体感できる練習ツール。"
     />
     <meta name="category" content="スロット" />
     <title>運命乱数ずらし | takt op. Destiny</title>
@@ -80,13 +80,69 @@
       .app {
         position: relative;
         z-index: 1;
-        display: grid;
+        display: flex;
+        flex-direction: column;
         width: min(100%, 620px);
         min-height: 100svh;
         margin: 0 auto;
         padding: max(16px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
-        grid-template-rows: auto auto minmax(330px, 1fr) auto auto;
         gap: 14px;
+      }
+
+      .feature-tabs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5px;
+        padding: 4px;
+        border: 1px solid rgba(255, 244, 223, 0.1);
+        border-radius: 14px;
+        background: rgba(0, 0, 0, 0.32);
+      }
+
+      .feature-tab {
+        min-width: 0;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        padding: 8px 4px;
+        background: transparent;
+        color: #8f817c;
+        cursor: pointer;
+        font-size: clamp(9px, 2.7vw, 11px);
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+        transition: 180ms ease;
+      }
+
+      .feature-tab[aria-pressed="true"] {
+        border-color: color-mix(in srgb, var(--mode) 46%, transparent);
+        background: color-mix(in srgb, var(--mode) 19%, transparent);
+        color: var(--paper);
+        box-shadow: 0 0 18px var(--mode-soft);
+      }
+
+      .shift-view {
+        display: grid;
+        flex: 1;
+        grid-template-rows: minmax(330px, 1fr) auto auto;
+        gap: 14px;
+      }
+
+      .reward-view {
+        display: none;
+        flex: 1;
+        align-content: start;
+        gap: 12px;
+      }
+
+      .app[data-feature="chance"] .shift-view,
+      .app[data-feature="judge"] .shift-view {
+        display: none;
+      }
+
+      .app[data-feature="chance"] .reward-view,
+      .app[data-feature="judge"] .reward-view {
+        display: grid;
       }
 
       .topbar {
@@ -522,6 +578,339 @@
         text-align: center;
       }
 
+      .reward-heading {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .reward-heading p,
+      .reward-heading h1,
+      .reward-heading small {
+        margin: 0;
+      }
+
+      .reward-heading p {
+        color: var(--mode);
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 0.16em;
+      }
+
+      .reward-heading h1 {
+        margin-top: 3px;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(28px, 8vw, 42px);
+        font-weight: 500;
+        line-height: 1;
+      }
+
+      .reward-heading small {
+        max-width: 17ch;
+        color: var(--muted);
+        font-size: 10px;
+        line-height: 1.5;
+        text-align: right;
+      }
+
+      .reward-board {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(240, 198, 110, 0.2);
+        border-radius: 22px;
+        padding: 16px;
+        background:
+          radial-gradient(circle at 50% 0%, var(--mode-soft), transparent 55%),
+          linear-gradient(150deg, rgba(38, 24, 31, 0.94), rgba(8, 9, 12, 0.96));
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.34);
+      }
+
+      .reward-board::before {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        content: "";
+        opacity: 0.36;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent 0 29px,
+          rgba(255, 244, 223, 0.08) 30px,
+          transparent 31px 39px
+        );
+        mask-image: linear-gradient(to bottom, black, transparent 76%);
+      }
+
+      .reward-topline,
+      .reward-result,
+      .reward-actions,
+      .reward-settings,
+      .reward-stats,
+      .reward-history {
+        position: relative;
+        z-index: 1;
+      }
+
+      .reward-topline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .st-counter {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .st-counter > span:first-child,
+      .table-badge {
+        color: var(--muted);
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 0.13em;
+      }
+
+      .st-dots {
+        display: flex;
+        gap: 5px;
+      }
+
+      .st-dot {
+        width: 24px;
+        height: 8px;
+        border: 1px solid rgba(255, 244, 223, 0.15);
+        border-radius: 99px;
+        background: rgba(0, 0, 0, 0.32);
+        transition: 180ms ease;
+      }
+
+      .st-dot.is-active {
+        border-color: var(--mode);
+        background: var(--mode);
+        box-shadow: 0 0 13px var(--mode-soft);
+      }
+
+      .table-badge {
+        border: 1px solid rgba(240, 198, 110, 0.18);
+        border-radius: 999px;
+        padding: 5px 8px;
+        color: var(--gold);
+      }
+
+      .reward-result {
+        display: grid;
+        min-height: 210px;
+        align-content: center;
+        justify-items: center;
+        padding: 18px 0 12px;
+        text-align: center;
+      }
+
+      .reward-step {
+        margin-bottom: 7px;
+        color: var(--mode);
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.16em;
+      }
+
+      .reward-value {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(38px, 12vw, 62px);
+        font-weight: 500;
+        line-height: 1;
+        text-shadow: 0 0 30px var(--mode-soft);
+      }
+
+      .draw-result {
+        display: grid;
+        min-height: 54px;
+        align-content: center;
+        margin-top: 18px;
+      }
+
+      .draw-result strong {
+        color: var(--gold);
+        font-size: 16px;
+      }
+
+      .draw-result span {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .draw-result.is-up strong {
+        color: var(--cyan);
+      }
+
+      .draw-result.is-rare strong {
+        color: #ff718a;
+      }
+
+      .reward-actions {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+      }
+
+      .lever-button,
+      .reset-round-button {
+        min-height: 54px;
+        border-radius: 13px;
+        cursor: pointer;
+        font-weight: 1000;
+        letter-spacing: 0.06em;
+      }
+
+      .lever-button {
+        border: 1px solid color-mix(in srgb, var(--mode) 72%, white);
+        background: linear-gradient(135deg, color-mix(in srgb, var(--mode) 88%, #3a1018), #601020);
+        color: white;
+        box-shadow: 0 8px 0 #19070d, 0 14px 24px rgba(0, 0, 0, 0.28);
+      }
+
+      .lever-button:active {
+        transform: translateY(5px);
+        box-shadow: 0 3px 0 #19070d, 0 8px 16px rgba(0, 0, 0, 0.26);
+      }
+
+      .reset-round-button {
+        width: 58px;
+        border: 1px solid rgba(255, 244, 223, 0.14);
+        background: rgba(255, 255, 255, 0.045);
+        color: var(--muted);
+      }
+
+      .reward-settings {
+        display: grid;
+        gap: 8px;
+      }
+
+      .setting-row {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .setting-row > span {
+        color: var(--muted);
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+      }
+
+      .opponent-buttons {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 5px;
+      }
+
+      .opponent-button {
+        min-width: 0;
+        border: 1px solid rgba(255, 244, 223, 0.12);
+        border-radius: 9px;
+        padding: 7px 3px;
+        background: rgba(255, 255, 255, 0.035);
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 10px;
+        font-weight: 800;
+      }
+
+      .opponent-button[aria-pressed="true"] {
+        border-color: var(--gold);
+        background: rgba(240, 198, 110, 0.12);
+        color: var(--paper);
+      }
+
+      .chance-note {
+        display: none;
+        border: 1px solid rgba(111, 215, 219, 0.16);
+        border-radius: 10px;
+        padding: 8px 10px;
+        background: rgba(111, 215, 219, 0.05);
+        color: var(--muted);
+        font-size: 10px;
+        line-height: 1.55;
+      }
+
+      .app[data-feature="chance"] .judge-setting {
+        display: none;
+      }
+
+      .app[data-feature="chance"] .chance-note {
+        display: block;
+      }
+
+      .reward-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+      }
+
+      .reward-stat {
+        border: 1px solid rgba(255, 244, 223, 0.09);
+        border-radius: 10px;
+        padding: 8px 4px;
+        background: rgba(255, 255, 255, 0.025);
+        text-align: center;
+      }
+
+      .reward-stat span {
+        display: block;
+        color: var(--muted);
+        font-size: 8px;
+        font-weight: 800;
+      }
+
+      .reward-stat strong {
+        display: block;
+        margin-top: 3px;
+        color: var(--paper);
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 18px;
+        font-weight: 500;
+      }
+
+      .reward-history {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .reward-history li {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border-bottom: 1px solid rgba(255, 244, 223, 0.07);
+        padding: 8px 2px;
+        color: var(--muted);
+        font-size: 10px;
+      }
+
+      .reward-history li strong {
+        color: var(--paper);
+        font-size: 11px;
+      }
+
+      .reward-board.is-hit {
+        animation: reward-hit 380ms ease-out;
+      }
+
+      @keyframes reward-hit {
+        45% {
+          border-color: var(--mode);
+          filter: brightness(1.55);
+          transform: scale(1.01);
+        }
+      }
+
       .flash {
         animation: screen-flash 420ms ease-out;
       }
@@ -554,10 +943,14 @@
 
       @media (max-height: 730px) {
         .app {
-          grid-template-rows: auto auto minmax(260px, 1fr) auto auto;
           gap: 9px;
           padding-top: 10px;
           padding-bottom: 10px;
+        }
+
+        .shift-view {
+          grid-template-rows: minmax(260px, 1fr) auto auto;
+          gap: 9px;
         }
 
         .brand-mark,
@@ -593,6 +986,39 @@
         .probability-card {
           padding: 9px 10px;
         }
+
+        .reward-view {
+          gap: 8px;
+        }
+
+        .reward-result {
+          min-height: 158px;
+          padding: 10px 0 6px;
+        }
+
+        .draw-result {
+          min-height: 46px;
+          margin-top: 10px;
+        }
+
+        .reward-board {
+          padding: 12px;
+        }
+      }
+
+      @media (max-width: 430px) {
+        .reward-heading small {
+          display: none;
+        }
+
+        .setting-row {
+          grid-template-columns: 1fr;
+          gap: 5px;
+        }
+
+        .opponent-buttons {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -608,17 +1034,23 @@
     </style>
   </head>
   <body>
-    <main class="app" id="app" data-state="idle">
+    <main class="app" id="app" data-state="idle" data-feature="shift">
       <header class="topbar">
         <div class="brand">
           <div class="brand-mark" aria-hidden="true">𝄞</div>
           <div class="brand-copy">
             <strong>takt op. Destiny</strong>
-            <small>random shift conductor</small>
+            <small>destiny practice conductor</small>
           </div>
         </div>
         <button class="sound-button" id="soundButton" type="button" aria-label="サウンドをオンにする" aria-pressed="false">♪</button>
       </header>
+
+      <nav class="feature-tabs" aria-label="練習モード">
+        <button class="feature-tab" type="button" data-feature-tab="shift" aria-pressed="true">乱数ずらし</button>
+        <button class="feature-tab" type="button" data-feature-tab="chance" aria-pressed="false">報酬CHANCE</button>
+        <button class="feature-tab" type="button" data-feature-tab="judge" aria-pressed="false">報酬JUDGE</button>
+      </nav>
 
       <div class="mode-switch" role="group" aria-label="内部状態を選択">
         <button class="mode-button" type="button" data-mode="normal" aria-pressed="true">
@@ -631,7 +1063,8 @@
         </button>
       </div>
 
-      <section class="stage" aria-label="乱数ずらし操作">
+      <div class="shift-view">
+        <section class="stage" aria-label="乱数ずらし操作">
         <span class="staff-note one" aria-hidden="true">♪</span>
         <span class="staff-note two" aria-hidden="true">𝄢</span>
         <div class="dial" id="dial">
@@ -651,39 +1084,108 @@
             </span>
           </button>
         </div>
-      </section>
+        </section>
 
-      <section class="status" aria-live="polite" aria-atomic="true">
-        <p class="state-kicker" id="stateKicker">CONDUCTOR READY</p>
-        <h1 class="state-title" id="stateTitle">運命の一音を指揮する</h1>
-        <p class="state-detail" id="stateDetail">中央のボタンで乱数ずらしを開始</p>
-      </section>
+        <section class="status" aria-live="polite" aria-atomic="true">
+          <p class="state-kicker" id="stateKicker">CONDUCTOR READY</p>
+          <h1 class="state-title" id="stateTitle">運命の一音を指揮する</h1>
+          <p class="state-detail" id="stateDetail">中央のボタンで乱数ずらしを開始</p>
+        </section>
 
-      <section aria-label="待機データ">
-        <div class="metrics">
-          <div class="metric">
-            <span>base interval</span>
-            <strong id="baseMetric">4.10s</strong>
+        <section aria-label="待機データ">
+          <div class="metrics">
+            <div class="metric">
+              <span>base interval</span>
+              <strong id="baseMetric">4.10s</strong>
+            </div>
+            <div class="metric">
+              <span>random shift</span>
+              <strong id="shiftMetric">+0.00s</strong>
+            </div>
+            <div class="metric">
+              <span>total</span>
+              <strong id="totalMetric">4.10s</strong>
+            </div>
           </div>
-          <div class="metric">
-            <span>random shift</span>
-            <strong id="shiftMetric">+0.00s</strong>
+
+          <div class="probability-card">
+            <div class="probability-head">
+              <span>small role probability</span>
+              <strong id="modeLabel">通常状態（MB2内部中）</strong>
+            </div>
+            <div class="role-list" id="roleList"></div>
           </div>
-          <div class="metric">
-            <span>total</span>
-            <strong id="totalMetric">4.10s</strong>
+          <p class="fineprint">
+            小役合算の分母を秒数に見立てたオカルト演出です。実機の抽選・当選確率・出玉には影響しません。
+          </p>
+        </section>
+      </div>
+
+      <section class="reward-view" aria-label="報酬ST練習">
+        <div class="reward-heading">
+          <div>
+            <p id="rewardKicker">3G ST PRACTICE</p>
+            <h1 id="rewardTitle">報酬CHANCE</h1>
+          </div>
+          <small id="rewardLead">小役成立で報酬昇格＋残り3Gへ再セット</small>
+        </div>
+
+        <div class="reward-board" id="rewardBoard">
+          <div class="reward-topline">
+            <div class="st-counter" aria-label="残りゲーム数">
+              <span>ST</span>
+              <div class="st-dots" id="stDots">
+                <span class="st-dot is-active"></span>
+                <span class="st-dot is-active"></span>
+                <span class="st-dot is-active"></span>
+              </div>
+            </div>
+            <span class="table-badge" id="tableBadge">TABLE ?</span>
+          </div>
+
+          <div class="reward-result" aria-live="polite" aria-atomic="true">
+            <span class="reward-step" id="rewardStep">READY / 3G ST</span>
+            <h2 class="reward-value" id="rewardValue">START</h2>
+            <div class="draw-result" id="drawResult">
+              <strong id="drawRole">練習を開始</strong>
+              <span id="drawDetail">実戦振り分けで報酬テーブルを抽選します</span>
+            </div>
+          </div>
+
+          <div class="reward-actions">
+            <button class="lever-button" id="leverButton" type="button">PRACTICE START</button>
+            <button class="reset-round-button" id="resetRoundButton" type="button" aria-label="ラウンドをリセット">↺</button>
           </div>
         </div>
 
-        <div class="probability-card">
-          <div class="probability-head">
-            <span>small role probability</span>
-            <strong id="modeLabel">通常状態（MB2内部中）</strong>
+        <div class="reward-settings">
+          <div class="setting-row judge-setting">
+            <span>BATTLE RESULT</span>
+            <div class="opponent-buttons" role="group" aria-label="報酬JUDGEの獲得契機">
+              <button class="opponent-button" type="button" data-opponent="hell" aria-pressed="true">地獄</button>
+              <button class="opponent-button" type="button" data-opponent="heaven" aria-pressed="false">天国</button>
+              <button class="opponent-button" type="button" data-opponent="orpheus" aria-pressed="false">オルフェ</button>
+              <button class="opponent-button" type="button" data-opponent="stock" aria-pressed="false">ストック</button>
+            </div>
           </div>
-          <div class="role-list" id="roleList"></div>
+          <div class="chance-note">
+            実戦振り分け（A 98.8%／B・C・D 各0.4%）でテーブルを抽選。1回昇格でAT突入、以降は初期枚数が上がります。
+          </div>
         </div>
+
+        <div class="reward-stats" aria-label="練習成績">
+          <div class="reward-stat"><span>ROUND</span><strong id="statRounds">0</strong></div>
+          <div class="reward-stat"><span>PLAY</span><strong id="statPlays">0</strong></div>
+          <div class="reward-stat"><span>UP</span><strong id="statUps">0</strong></div>
+          <div class="reward-stat"><span>MAX</span><strong id="statMax">0</strong></div>
+        </div>
+
+        <ol class="reward-history" id="rewardHistory">
+          <li><span>まだ練習履歴がありません</span><strong>—</strong></li>
+        </ol>
+
         <p class="fineprint">
-          小役合算の分母を秒数に見立てたオカルト演出です。実機の抽選・当選確率・出玉には影響しません。
+          公開解析値を使った非公式シミュレーターです。内部抽選の完全再現や結果の保証をするものではありません。
         </p>
       </section>
     </main>
@@ -696,11 +1198,11 @@
           color: "#df334c",
           soft: "rgba(223, 51, 76, 0.24)",
           roles: [
-            ["リプレイ", "1/8.5"],
-            ["ベル", "1/10.5"],
-            ["弱チャンス目", "1/56.0"],
-            ["強チャンス目", "1/256.0"],
-            ["MB", "1/89.5"],
+            ["リプレイ", "1/8.5", 8.5, "replay"],
+            ["ベル", "1/10.5", 10.5, "bell"],
+            ["弱チャンス目", "1/56.0", 56, "weak"],
+            ["強チャンス目", "1/256.0", 256, "strong"],
+            ["タクト揃い", "1/89.5", 89.5, "takt"],
           ],
         },
         meteorite: {
@@ -709,13 +1211,39 @@
           color: "#a76ed4",
           soft: "rgba(167, 110, 212, 0.25)",
           roles: [
-            ["リプレイ", "1/8.5"],
-            ["ベル", "1/180.0"],
-            ["弱チャンス目", "1/4.7"],
-            ["強チャンス目", "1/256.0"],
-            ["MB", "1/20.0"],
+            ["リプレイ", "1/8.5", 8.5, "replay"],
+            ["ベル", "1/180.0", 180, "bell"],
+            ["弱チャンス目", "1/4.7", 4.7, "weak"],
+            ["強チャンス目", "1/256.0", 256, "strong"],
+            ["タクト揃い", "1/20.0", 20, "takt"],
           ],
         },
+      };
+
+      const CHANCE_TABLES = {
+        A: ["AT非当選", "+150枚", "+200枚", "+250枚", "+300枚"],
+        B: ["AT非当選", "+150枚", "+200枚", "+300枚", "+500枚"],
+        C: ["AT非当選", "+150枚", "+200枚", "+300枚", "+2000枚"],
+        D: ["+150枚", "+500枚", "+1000枚", "+2000枚", "+3000枚"],
+      };
+
+      const JUDGE_TABLES = {
+        A: ["+50枚", "+100枚", "+150枚", "+200枚", "+300枚"],
+        B: ["+50枚", "+100枚", "+200枚", "+300枚", "+500枚"],
+        C: ["+50枚", "+50枚", "+300枚", "+400枚", "+500枚"],
+        D: ["+100枚", "+200枚", "+300枚", "+500枚", "歓喜の歌Ⅰ"],
+        E: ["+200枚", "+300枚", "+400枚", "+500枚", "歓喜の歌Ⅰ"],
+        "響演A": ["+100枚", "+200枚", "+350枚", "+500枚", "+800枚"],
+        "響演B": ["+200枚", "+400枚", "+600枚", "+800枚", "+1000枚"],
+        超: ["巨人RUSH", "運命RUSH", "DESTINY RUSH", "歓喜の歌Ⅰ", "歓喜の歌Ⅱ"],
+        極: ["歓喜の歌Ⅰ", "歓喜の歌Ⅰ", "歓喜の歌Ⅰ", "歓喜の歌Ⅰ", "歓喜の歌Ⅱ"],
+      };
+
+      const JUDGE_DISTRIBUTIONS = {
+        hell: [["A", 72.6], ["C", 10], ["D", 0.4], ["E", 0.4], ["響演A", 16.2], ["響演B", 0.4]],
+        heaven: [["A", 75.9], ["B", 8.5], ["D", 0.4], ["E", 0.4], ["響演A", 14.4], ["響演B", 0.4]],
+        orpheus: [["D", 75.8], ["E", 9.2], ["超", 14.6], ["極", 0.4]],
+        stock: [["A", 89.8], ["B", 4.7], ["C", 4.7], ["響演A", 0.4], ["響演B", 0.4]],
       };
 
       const OCCULT_MESSAGES = [
@@ -740,8 +1268,29 @@
       const modeLabel = document.querySelector("#modeLabel");
       const roleList = document.querySelector("#roleList");
       const modeButtons = [...document.querySelectorAll("[data-mode]")];
+      const featureTabs = [...document.querySelectorAll("[data-feature-tab]")];
+      const opponentButtons = [...document.querySelectorAll("[data-opponent]")];
+      const rewardTitle = document.querySelector("#rewardTitle");
+      const rewardLead = document.querySelector("#rewardLead");
+      const rewardBoard = document.querySelector("#rewardBoard");
+      const stDots = [...document.querySelectorAll(".st-dot")];
+      const tableBadge = document.querySelector("#tableBadge");
+      const rewardStep = document.querySelector("#rewardStep");
+      const rewardValue = document.querySelector("#rewardValue");
+      const drawResult = document.querySelector("#drawResult");
+      const drawRole = document.querySelector("#drawRole");
+      const drawDetail = document.querySelector("#drawDetail");
+      const leverButton = document.querySelector("#leverButton");
+      const resetRoundButton = document.querySelector("#resetRoundButton");
+      const statRounds = document.querySelector("#statRounds");
+      const statPlays = document.querySelector("#statPlays");
+      const statUps = document.querySelector("#statUps");
+      const statMax = document.querySelector("#statMax");
+      const rewardHistory = document.querySelector("#rewardHistory");
 
       let selectedMode = "normal";
+      let selectedFeature = "shift";
+      let selectedOpponent = "hell";
       let state = "idle";
       let startedAt = 0;
       let totalWait = 0;
@@ -749,6 +1298,9 @@
       let messageTimer = 0;
       let soundOn = false;
       let audioContext = null;
+      let rewardSession = createEmptyRewardSession();
+      let rewardStats = { rounds: 0, plays: 0, ups: 0, max: 0 };
+      let rewardHistoryItems = [];
 
       function randomBetween(min, max) {
         if (window.crypto?.getRandomValues) {
@@ -763,11 +1315,251 @@
         return `${(milliseconds / 1000).toFixed(2)}s`;
       }
 
+      function createEmptyRewardSession() {
+        return {
+          active: false,
+          ended: false,
+          type: selectedFeature === "judge" ? "judge" : "chance",
+          table: "?",
+          level: 0,
+          remaining: 3,
+          pendingTakt: false,
+          games: 0,
+        };
+      }
+
+      function weightedPick(entries) {
+        const total = entries.reduce((sum, [, weight]) => sum + weight, 0);
+        let roll = randomBetween(0, total);
+        for (const [value, weight] of entries) {
+          roll -= weight;
+          if (roll < 0) return value;
+        }
+        return entries.at(-1)[0];
+      }
+
+      function pickRewardTable(type) {
+        if (type === "chance") {
+          return weightedPick([["A", 98.8], ["B", 0.4], ["C", 0.4], ["D", 0.4]]);
+        }
+        return weightedPick(JUDGE_DISTRIBUTIONS[selectedOpponent]);
+      }
+
+      function getRewardValue() {
+        if (rewardSession.table === "?") return "START";
+        const tables = rewardSession.type === "chance" ? CHANCE_TABLES : JUDGE_TABLES;
+        return tables[rewardSession.table][rewardSession.level];
+      }
+
+      function drawSmallRole() {
+        let roll = randomBetween(0, 1);
+        for (const [name, , denominator, id] of MODES[selectedMode].roles) {
+          roll -= 1 / denominator;
+          if (roll < 0) return { id, name };
+        }
+        return { id: "miss", name: "ハズレ" };
+      }
+
+      function renderStDots() {
+        stDots.forEach((dot, index) => {
+          dot.classList.toggle("is-active", index < rewardSession.remaining);
+        });
+      }
+
+      function renderRewardStats() {
+        statRounds.textContent = rewardStats.rounds;
+        statPlays.textContent = rewardStats.plays;
+        statUps.textContent = rewardStats.ups;
+        statMax.textContent = rewardStats.max;
+      }
+
+      function renderRewardHistory() {
+        if (!rewardHistoryItems.length) {
+          rewardHistory.innerHTML = "<li><span>まだ練習履歴がありません</span><strong>—</strong></li>";
+          return;
+        }
+        rewardHistory.innerHTML = rewardHistoryItems
+          .slice(0, 5)
+          .map((item) => `<li><span>${item.mode} / ${item.games}G / ${item.table}</span><strong>${item.result}</strong></li>`)
+          .join("");
+      }
+
+      function renderRewardView() {
+        const isJudge = selectedFeature === "judge";
+        rewardTitle.textContent = isJudge ? "報酬JUDGE" : "報酬CHANCE";
+        rewardLead.textContent = isJudge
+          ? "小役で上乗せ報酬を昇格。全9テーブルを再現"
+          : "1回昇格でAT。さらに初期差枚数を上乗せ";
+
+        tableBadge.textContent = rewardSession.table === "?" ? "TABLE ?" : `TABLE ${rewardSession.table}`;
+        rewardStep.textContent = rewardSession.active
+          ? `LEVEL ${rewardSession.level} / 4 ・ ${rewardSession.remaining}G LEFT`
+          : rewardSession.ended
+            ? `RESULT ・ LEVEL ${rewardSession.level}`
+            : "READY / 3G ST";
+        rewardValue.textContent = getRewardValue();
+        leverButton.textContent = rewardSession.active ? "LEVER ON" : rewardSession.ended ? "もう一度" : "PRACTICE START";
+        renderStDots();
+        renderRewardStats();
+        renderRewardHistory();
+        updateControlLocks();
+      }
+
+      function setDrawMessage(role, detail, tone = "") {
+        drawRole.textContent = role;
+        drawDetail.textContent = detail;
+        drawResult.className = `draw-result${tone ? ` ${tone}` : ""}`;
+      }
+
+      function flashRewardBoard() {
+        rewardBoard.classList.remove("is-hit");
+        void rewardBoard.offsetWidth;
+        rewardBoard.classList.add("is-hit");
+      }
+
+      function startRewardSession() {
+        const type = selectedFeature === "judge" ? "judge" : "chance";
+        rewardSession = {
+          active: true,
+          ended: false,
+          type,
+          table: pickRewardTable(type),
+          level: 0,
+          remaining: 3,
+          pendingTakt: false,
+          games: 0,
+        };
+        rewardStats.rounds += 1;
+        setDrawMessage("READY", "レバーオンで1G目を抽選");
+        playTone(type === "judge" ? 392 : 329.63, 0.14);
+        renderRewardView();
+      }
+
+      function applyRewardUpgrade(amount, reason) {
+        const previous = rewardSession.level;
+        rewardSession.level = Math.min(4, rewardSession.level + amount);
+        const gained = rewardSession.level - previous;
+        rewardStats.ups += gained;
+        rewardSession.remaining = 3;
+        setDrawMessage(reason, gained >= 2 ? `W UP！ ${previous} → ${rewardSession.level}` : `報酬UP！ ${previous} → ${rewardSession.level}`, gained >= 2 ? "is-rare" : "is-up");
+        flashRewardBoard();
+        playTone(gained >= 2 ? 783.99 : 659.25, 0.18);
+        navigator.vibrate?.(gained >= 2 ? [50, 35, 90] : 55);
+
+        if (rewardSession.level >= 4) {
+          rewardStats.max += 1;
+          finishRewardSession("MAX REWARD");
+        }
+      }
+
+      function finishRewardSession(reason) {
+        rewardSession.active = false;
+        rewardSession.ended = true;
+        const result = getRewardValue();
+        rewardHistoryItems.unshift({
+          mode: rewardSession.type === "judge" ? "JUDGE" : "CHANCE",
+          games: rewardSession.games,
+          table: `T-${rewardSession.table}`,
+          result,
+        });
+        setDrawMessage(reason, result === "AT非当選" ? "ST終了 / AT非当選" : `最終報酬 ${result}`, result === "AT非当選" ? "" : "is-up");
+        playTone(result === "AT非当選" ? 196 : 523.25, 0.2);
+        if (result !== "AT非当選") playTone(659.25, 0.22, 0.09);
+        renderRewardView();
+      }
+
+      function resolveTaktFollowup() {
+        rewardSession.pendingTakt = false;
+        const taktSuccess = randomBetween(0, 1) < 0.79;
+        if (taktSuccess) {
+          applyRewardUpgrade(2, "タクト目停止");
+          return;
+        }
+
+        const bonus = randomBetween(0, 1) < 0.11;
+        if (bonus) {
+          const gained = 4 - rewardSession.level;
+          rewardSession.level = 4;
+          rewardStats.ups += gained;
+          rewardStats.max += 1;
+          setDrawMessage("DESTINY BONUS", "最高報酬獲得！", "is-rare");
+          flashRewardBoard();
+          finishRewardSession("BONUS / MAX");
+          return;
+        }
+
+        rewardSession.remaining -= 1;
+        setDrawMessage("狙え失敗", `残り ${rewardSession.remaining}G`, "");
+      }
+
+      function drawRewardGame() {
+        rewardSession.games += 1;
+        rewardStats.plays += 1;
+
+        if (rewardSession.pendingTakt) {
+          resolveTaktFollowup();
+        } else {
+          const role = drawSmallRole();
+          if (role.id === "miss") {
+            rewardSession.remaining -= 1;
+            setDrawMessage("ハズレ", `残り ${rewardSession.remaining}G`, "");
+            playTone(174.61, 0.08);
+          } else if (role.id === "strong") {
+            applyRewardUpgrade(2, role.name);
+          } else if (role.id === "weak") {
+            const doubleUp = randomBetween(0, 1) < 0.004;
+            applyRewardUpgrade(doubleUp ? 2 : 1, role.name);
+          } else if (role.id === "takt") {
+            rewardSession.pendingTakt = true;
+            applyRewardUpgrade(1, role.name);
+            if (rewardSession.active) drawDetail.textContent += " / 次G 狙え！";
+          } else {
+            applyRewardUpgrade(1, role.name);
+          }
+        }
+
+        if (rewardSession.active && rewardSession.remaining <= 0) {
+          finishRewardSession("ST END");
+          return;
+        }
+        renderRewardView();
+      }
+
+      function resetRewardRound() {
+        rewardSession = createEmptyRewardSession();
+        setDrawMessage("練習を開始", "実戦振り分けで報酬テーブルを抽選します");
+        renderRewardView();
+      }
+
+      function switchFeature(feature) {
+        if (state !== "idle") reset();
+        selectedFeature = feature;
+        rewardSession = createEmptyRewardSession();
+        app.dataset.feature = feature;
+        featureTabs.forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.featureTab === feature));
+        });
+        if (feature !== "shift") {
+          setDrawMessage("練習を開始", "実戦振り分けで報酬テーブルを抽選します");
+          renderRewardView();
+        } else {
+          updateControlLocks();
+        }
+      }
+
       function setState(nextState) {
         state = nextState;
         app.dataset.state = nextState;
+        updateControlLocks();
+      }
+
+      function updateControlLocks() {
+        const locked = state !== "idle" || rewardSession.active;
         modeButtons.forEach((button) => {
-          button.disabled = nextState !== "idle";
+          button.disabled = locked;
+        });
+        opponentButtons.forEach((button) => {
+          button.disabled = rewardSession.active;
         });
       }
 
@@ -887,12 +1679,38 @@
 
       modeButtons.forEach((button) => {
         button.addEventListener("click", () => {
-          if (state !== "idle") return;
+          if (state !== "idle" || rewardSession.active) return;
           selectedMode = button.dataset.mode;
           renderMode();
+          if (selectedFeature !== "shift") resetRewardRound();
           playTone(selectedMode === "normal" ? 392 : 311.13, 0.12);
         });
       });
+
+      featureTabs.forEach((button) => {
+        button.addEventListener("click", () => switchFeature(button.dataset.featureTab));
+      });
+
+      opponentButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          if (rewardSession.active) return;
+          selectedOpponent = button.dataset.opponent;
+          opponentButtons.forEach((item) => {
+            item.setAttribute("aria-pressed", String(item.dataset.opponent === selectedOpponent));
+          });
+          resetRewardRound();
+        });
+      });
+
+      leverButton.addEventListener("click", () => {
+        if (!rewardSession.active) {
+          startRewardSession();
+        } else {
+          drawRewardGame();
+        }
+      });
+
+      resetRoundButton.addEventListener("click", resetRewardRound);
 
       soundButton.addEventListener("click", () => {
         soundOn = !soundOn;
@@ -904,6 +1722,8 @@
       mainButton.addEventListener("click", handleAction);
 
       renderMode();
+      renderRewardStats();
+      renderRewardHistory();
     </script>
   </body>
 </html>
