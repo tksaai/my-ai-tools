@@ -29,6 +29,12 @@
     "description": "スマスロ ソードアート・オンラインIIの解析値を使い、実戦データから設定1～6の相対期待度を計算する設定判別ツール。",
     "category": "スロット"
   },
+  "sao2-bullet-occult.html": {
+    "name": "SAO2 バレット目オカルトナビ",
+    "icon": "◎",
+    "description": "指定したバレット目A～Eに向けて、オカルトのレバーONタイミングを生成・記録する娯楽用ツール。",
+    "category": "スロット"
+  },
   "hamari.html": {
     "name": "hamari",
     "icon": "📱",
