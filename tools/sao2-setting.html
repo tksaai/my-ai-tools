@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="スマスロ ソードアート・オンラインIIの解析値を使い、実戦データから設定1～6の相対期待度を計算する設定判別ツール。">
+  <meta name="icon" content="🎯">
+  <meta name="category" content="スロット">
+  <meta name="theme-color" content="#070913">
+  <title>SAO2 設定判別 | GGO ANALYZER</title>
+  <style>
+    :root{
+      color-scheme:dark;--bg:#070913;--panel:#0d1222;--panel2:#121a31;--line:rgba(121,214,255,.17);
+      --text:#edf8ff;--muted:#8ea2bd;--cyan:#5ee7ff;--blue:#4c83ff;--violet:#a36bff;--pink:#ff5ab3;
+      --green:#55efb6;--yellow:#ffd86b;--red:#ff657e;--shadow:0 22px 70px rgba(0,0,0,.38);
+      font-family:Inter,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif
+    }
+    *{box-sizing:border-box}html{min-height:100%;background:var(--bg)}body{min-height:100vh;margin:0;color:var(--text);background:
+      radial-gradient(circle at 12% -5%,rgba(80,104,255,.24),transparent 32rem),
+      radial-gradient(circle at 95% 22%,rgba(213,70,255,.12),transparent 26rem),
+      linear-gradient(145deg,#060811 0%,#090d1b 48%,#080714 100%);overflow-x:hidden}
+    body::before{position:fixed;inset:0;z-index:-2;content:"";pointer-events:none;background-image:
+      linear-gradient(rgba(94,231,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(94,231,255,.035) 1px,transparent 1px);
+      background-size:42px 42px;mask-image:linear-gradient(to bottom,#000,transparent 85%)}
+    body::after{position:fixed;top:12vh;right:-110px;z-index:-1;width:330px;height:330px;border:1px solid rgba(94,231,255,.11);border-radius:50%;content:"";box-shadow:0 0 0 42px rgba(94,231,255,.025),0 0 0 85px rgba(94,231,255,.018);pointer-events:none}
+    button,input,select{font:inherit}button{color:inherit}.app{width:min(1120px,100%);margin:auto;padding:18px clamp(12px,3vw,28px) 48px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:8px 2px 18px}.brand{display:flex;align-items:center;gap:11px}.brand-mark{position:relative;display:grid;place-items:center;width:42px;height:42px;border:1px solid rgba(94,231,255,.4);border-radius:50%;color:var(--cyan);background:rgba(94,231,255,.06);box-shadow:0 0 22px rgba(94,231,255,.12);font-size:18px}.brand-mark::after{position:absolute;width:8px;height:8px;border:1px solid currentColor;border-radius:50%;content:""}.brand strong{display:block;font-size:13px;letter-spacing:.13em}.brand small{display:block;margin-top:2px;color:var(--muted);font-size:9px;letter-spacing:.1em}.status-chip{padding:8px 11px;border:1px solid rgba(85,239,182,.23);border-radius:999px;color:var(--green);background:rgba(85,239,182,.06);font-size:10px;font-weight:800;white-space:nowrap}
+    .hero{position:relative;display:grid;grid-template-columns:1.25fr .75fr;gap:18px;min-height:250px;padding:clamp(22px,4vw,42px);overflow:hidden;border:1px solid rgba(111,190,255,.19);border-radius:30px;background:linear-gradient(135deg,rgba(19,28,57,.96),rgba(10,13,29,.98));box-shadow:var(--shadow)}
+    .hero::before{position:absolute;top:-100px;right:30%;width:330px;height:330px;border:1px solid rgba(94,231,255,.08);border-radius:50%;content:""}.eyebrow{margin:0 0 12px;color:var(--cyan);font-size:10px;font-weight:900;letter-spacing:.22em}.hero h1{max-width:650px;margin:0;font-size:clamp(34px,6vw,62px);line-height:.98;letter-spacing:-.055em}.hero h1 em{display:block;margin-top:9px;color:transparent;background:linear-gradient(90deg,var(--cyan),#86a8ff 52%,#e485ff);background-clip:text;font-style:normal}.hero-copy{max-width:610px;margin:18px 0 0;color:#aabbd0;font-size:13px;line-height:1.85}.hero-tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:20px}.hero-tags span{padding:6px 9px;border:1px solid var(--line);border-radius:7px;color:#9fcce4;background:rgba(94,231,255,.04);font-size:9px;font-weight:800}
+    .target{position:relative;display:grid;place-items:center;min-height:190px}.target-rings{position:absolute;width:188px;height:188px;border:1px solid rgba(94,231,255,.22);border-radius:50%;box-shadow:0 0 0 24px rgba(94,231,255,.025),0 0 0 48px rgba(94,231,255,.018)}.target-rings::before,.target-rings::after{position:absolute;content:"";background:rgba(94,231,255,.28)}.target-rings::before{top:50%;left:-19px;width:224px;height:1px}.target-rings::after{top:-19px;left:50%;width:1px;height:224px}.target-core{position:relative;text-align:center}.target-core span{display:block;color:#7e91aa;font-size:9px;font-weight:900;letter-spacing:.18em}.target-core b{display:block;margin:8px 0 2px;color:var(--cyan);font-size:62px;line-height:1;text-shadow:0 0 28px rgba(94,231,255,.28)}.target-core small{color:#d6eaff;font-size:11px;font-weight:800}
+    .layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:16px;margin-top:16px}.stack{display:grid;align-content:start;gap:16px}.card{border:1px solid var(--line);border-radius:22px;background:linear-gradient(155deg,rgba(17,24,46,.95),rgba(9,13,27,.97));box-shadow:0 15px 45px rgba(0,0,0,.24)}.card-pad{padding:20px}.section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}.section-head h2{margin:0;font-size:18px}.section-head p{margin:5px 0 0;color:var(--muted);font-size:11px;line-height:1.6}.section-index{flex:none;color:rgba(94,231,255,.55);font-size:10px;font-weight:900;letter-spacing:.14em}
+    .summary{position:sticky;top:12px;z-index:3;padding:20px;border-color:rgba(94,231,255,.28);background:linear-gradient(150deg,rgba(17,29,56,.98),rgba(9,13,29,.99))}.summary-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding-bottom:16px;border-bottom:1px solid var(--line)}.summary-label{color:var(--muted);font-size:9px;font-weight:900;letter-spacing:.16em}.summary-setting{margin-top:4px;color:var(--cyan);font-size:clamp(34px,6vw,48px);font-weight:950;line-height:1}.summary-confidence{text-align:right}.summary-confidence b{display:block;color:#fff;font-size:24px}.summary-confidence span{color:var(--muted);font-size:9px}.prob-list{display:grid;gap:9px;margin-top:17px}.prob-row{display:grid;grid-template-columns:45px 1fr 48px;align-items:center;gap:9px;font-size:11px}.prob-row strong{color:#aabbd0}.prob-row.best strong,.prob-row.best output{color:var(--cyan)}.track{height:8px;overflow:hidden;border-radius:99px;background:#1a2338}.fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,#3e7dff,var(--cyan));box-shadow:0 0 12px rgba(94,231,255,.24);transition:width .25s ease}.prob-row:nth-child(5) .fill,.prob-row:nth-child(6) .fill{background:linear-gradient(90deg,#895cff,#ff63c3)}output{font-variant-numeric:tabular-nums;text-align:right}.summary-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:17px}.mini{padding:10px 5px;border:1px solid rgba(114,179,232,.13);border-radius:12px;text-align:center;background:rgba(5,10,23,.5)}.mini b{display:block;color:#bcefff;font-size:16px}.mini span{display:block;margin-top:3px;color:#6f829e;font-size:8px;font-weight:800}.sample{display:flex;align-items:center;gap:9px;margin-top:13px;padding:10px 11px;border:1px solid rgba(255,216,107,.13);border-radius:12px;color:#9cadc2;background:rgba(255,216,107,.035);font-size:10px;line-height:1.5}.sample b{color:var(--yellow);white-space:nowrap}
+    .signals{margin:14px 0 0;padding:0;list-style:none}.signals li{display:flex;align-items:flex-start;gap:8px;padding:8px 1px;border-bottom:1px solid rgba(121,214,255,.09);color:#91a4bd;font-size:10px;line-height:1.55}.signals li::before{flex:none;margin-top:5px;width:5px;height:5px;border-radius:50%;background:var(--cyan);content:""}.signals strong{color:#d9efff}
+    .field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.field{padding:12px;border:1px solid rgba(116,185,238,.14);border-radius:15px;background:rgba(8,13,29,.72)}.field.full{grid-column:1/-1}.field-top{display:flex;align-items:flex-start;justify-content:space-between;gap:7px;margin-bottom:8px}.field label{display:block;color:#dcefff;font-size:11px;font-weight:800}.field-hint{display:block;margin-top:3px;color:#6f829d;font-size:8px;line-height:1.4}.theory{flex:none;color:#6de5ff;font-size:8px;font-weight:800}.counter{display:grid;grid-template-columns:35px 1fr 35px;gap:5px}.counter button{min-height:39px;border:1px solid rgba(99,183,236,.15);border-radius:10px;color:#8da7c5;background:#151e34;cursor:pointer;font-size:16px;font-weight:800}.counter button:active{transform:scale(.96)}.counter input{min-width:0;width:100%;height:39px;border:1px solid rgba(94,231,255,.21);border-radius:10px;outline:none;color:#fff;background:#090f21;text-align:center;font-size:16px;font-weight:900;font-variant-numeric:tabular-nums}.counter input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(94,231,255,.08)}
+    .event{padding:13px;border:1px solid rgba(116,185,238,.13);border-radius:16px;background:rgba(7,12,26,.66)}.event+.event{margin-top:9px}.event-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:9px}.event-head strong{font-size:11px}.event-head span{color:#7287a3;font-size:8px;text-align:right}.event-inputs{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:8px}.compact label{display:block;margin-bottom:5px;color:#7085a1;font-size:8px;font-weight:800}.compact input{width:100%;height:40px;border:1px solid rgba(94,231,255,.17);border-radius:10px;outline:none;color:#fff;background:#0a1022;text-align:center;font-weight:900}.compact input:focus{border-color:var(--cyan)}.slash{padding-bottom:12px;color:#536784;font-size:11px}.invalid{margin:6px 0 0;color:var(--red);font-size:8px;font-weight:700}
+    .hint-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.hint-option{position:relative}.hint-option input{position:absolute;opacity:0;pointer-events:none}.hint-option label{display:block;height:100%;min-height:68px;padding:11px;border:1px solid rgba(120,180,230,.14);border-radius:13px;color:#8fa4bd;background:rgba(8,13,28,.64);cursor:pointer;font-size:10px;font-weight:800;line-height:1.5}.hint-option label small{display:block;margin-top:3px;color:#687d99;font-size:8px}.hint-option input:checked+label{border-color:rgba(94,231,255,.55);color:#e6f8ff;background:linear-gradient(135deg,rgba(48,113,170,.25),rgba(120,70,180,.13));box-shadow:inset 0 0 0 1px rgba(94,231,255,.08)}.reference-note{margin:11px 0 0;padding:11px 12px;border-left:2px solid var(--yellow);border-radius:4px 11px 11px 4px;color:#93a5bb;background:rgba(255,216,107,.045);font-size:9px;line-height:1.65}.reference-note b{color:#ffe49b}
+    .compare-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.compare{padding:12px;border:1px solid rgba(116,185,238,.12);border-radius:13px;background:rgba(8,13,28,.6)}.compare span{display:block;color:#6f839e;font-size:8px;font-weight:800}.compare b{display:block;margin-top:4px;color:#d8f3ff;font-size:14px}.compare small{display:block;margin-top:3px;color:#69819d;font-size:8px}.table-wrap{overflow:auto;border:1px solid rgba(116,185,238,.13);border-radius:15px}.spec-table{width:100%;min-width:660px;border-collapse:collapse;font-size:10px}.spec-table th,.spec-table td{padding:10px 9px;border-bottom:1px solid rgba(116,185,238,.09);text-align:center;white-space:nowrap}.spec-table th{position:sticky;top:0;color:#6f87a5;background:#10182c;font-size:8px}.spec-table td:first-child{color:var(--cyan);font-weight:900}.spec-table tr:last-child td{border-bottom:0}.spec-table tr.highlight td{background:rgba(94,231,255,.055)}
+    .actions{display:flex;gap:8px;margin-top:14px}.action{flex:1;min-height:45px;border:1px solid rgba(113,190,245,.17);border-radius:12px;color:#8fa5c1;background:#141e34;cursor:pointer;font-size:10px;font-weight:900}.action.primary{border:0;color:#06131d;background:linear-gradient(120deg,#82efff,#5a9cff);box-shadow:0 8px 24px rgba(75,171,255,.18)}
+    .sources{margin-top:16px;padding:17px 20px;color:#7e91aa;font-size:9px;line-height:1.75}.sources a{color:#85ddff}.sources strong{color:#b9d3e5}.sources p{margin:0}.sources p+p{margin-top:7px}footer{padding:18px 3px 0;color:#53657d;text-align:center;font-size:8px;line-height:1.7}
+    .toast{position:fixed;right:18px;bottom:18px;z-index:10;padding:10px 14px;border:1px solid rgba(94,231,255,.25);border-radius:12px;color:#dff9ff;background:rgba(9,16,32,.95);box-shadow:var(--shadow);font-size:10px;font-weight:800;opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:none}
+    @media(max-width:820px){.hero{grid-template-columns:1fr}.target{min-height:170px}.layout{grid-template-columns:1fr}.summary{position:relative;top:auto;order:-1}.right-stack{display:contents}}
+    @media(max-width:520px){.app{padding:10px 9px 30px}.topbar{padding:7px 3px 12px}.status-chip{display:none}.hero{padding:22px 17px;border-radius:22px}.hero h1{font-size:38px}.target-rings{width:162px;height:162px}.target-rings::before{left:-15px;width:192px}.target-rings::after{top:-15px;height:192px}.target-core b{font-size:52px}.card,.summary{border-radius:18px}.card-pad,.summary{padding:15px}.field-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.hint-grid{grid-template-columns:1fr 1fr}.summary-metrics{gap:5px}.mini b{font-size:14px}.event-inputs{gap:5px}.sources{padding:14px}.brand strong{font-size:11px}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">＋</span><div><strong>GGO ANALYSIS SYSTEM</strong><small>SETTING PROBABILITY / SAO II</small></div></div>
+      <span class="status-chip">● DATA LINKED / 2026.09</span>
+    </header>
+
+    <section class="hero">
+      <div>
+        <p class="eyebrow">SWORD ART ONLINE II / SMART PACHISLOT</p>
+        <h1>設定判別<em>GGO ANALYZER</em></h1>
+        <p class="hero-copy">実戦データと解析値のズレを照合し、設定1～6の相対期待度をリアルタイム推定。入力はこの端末だけに保存されます。</p>
+        <div class="hero-tags"><span>CZ / AT 初当り</span><span>強チャンス目B</span><span>レア役抽選</span><span>確定示唆</span></div>
+      </div>
+      <div class="target" aria-label="現在の推定設定">
+        <div class="target-rings" aria-hidden="true"></div>
+        <div class="target-core"><span>TARGET SETTING</span><b id="heroSetting">—</b><small id="heroSub">データ入力待ち</small></div>
+      </div>
+    </section>
+
+    <div class="layout">
+      <div class="stack">
+        <section class="card card-pad">
+          <div class="section-head"><div><h2>基本データ</h2><p>通常時ゲーム数と初当り・小役回数を入力。</p></div><span class="section-index">01 / CORE</span></div>
+          <div class="field-grid" id="coreFields"></div>
+        </section>
+
+        <section class="card card-pad">
+          <div class="section-head"><div><h2>契機別カウント</h2><p>分母＝成立・失敗回数、当選＝そこから当選した回数。</p></div><span class="section-index">02 / DETAIL</span></div>
+          <div id="eventFields"></div>
+        </section>
+
+        <section class="card card-pad">
+          <div class="section-head"><div><h2>AT開始ステージ</h2><p>引き戻しを含む初当り時のみ。高確スタート後の移行は除外。</p></div><span class="section-index">03 / STAGE</span></div>
+          <div class="field-grid" id="stageFields"></div>
+        </section>
+
+        <section class="card card-pad">
+          <div class="section-head"><div><h2>確定・濃厚示唆</h2><p>確認できた中で最も強い示唆を選択。</p></div><span class="section-index">04 / HINT</span></div>
+          <div class="hint-grid" id="hintFields"></div>
+          <p class="reference-note"><b>参考扱い：</b>「幼少期」は設定5の期待大（設定6より設定5で出やすい）。木漏れ日・夏祭り・奇偶示唆は出現率未公開、コパンダトロフィーの色別示唆は推定情報のため数値計算には入れていません。</p>
+        </section>
+
+        <section class="card card-pad">
+          <div class="section-head"><div><h2>解析値一覧</h2><p>判別計算に使用している主要数値。</p></div><span class="section-index">05 / SPEC</span></div>
+          <div class="table-wrap"><table class="spec-table"><thead><tr><th>設定</th><th>CZ初当り</th><th>AT初当り</th><th>強チャンス目B</th><th>詩乃直撃</th><th>出玉率</th></tr></thead><tbody id="specBody"></tbody></table></div>
+        </section>
+      </div>
+
+      <aside class="stack right-stack">
+        <section class="card summary" aria-live="polite">
+          <div class="summary-top"><div><span class="summary-label">MOST LIKELY</span><div class="summary-setting" id="resultSetting">判別待ち</div></div><div class="summary-confidence"><b id="resultScore">—</b><span>相対期待度</span></div></div>
+          <div class="prob-list" id="probList"></div>
+          <div class="summary-metrics"><div class="mini"><b id="high4">—</b><span>設定4以上</span></div><div class="mini"><b id="high5">—</b><span>設定5以上</span></div><div class="mini"><b id="expectedPay">—</b><span>推定出玉率</span></div></div>
+          <div class="sample"><b id="sampleRank">データ待ち</b><span id="sampleText">数値を入力すると自動で判別します。</span></div>
+          <ul class="signals" id="signals"></ul>
+          <div class="actions"><button class="action primary" id="saveButton" type="button">端末に保存</button><button class="action" id="resetButton" type="button">入力をリセット</button></div>
+        </section>
+
+        <section class="card card-pad">
+          <div class="section-head"><div><h2>実測比較</h2><p>現在値に近い解析設定を表示。</p></div><span class="section-index">LIVE</span></div>
+          <div class="compare-grid" id="compareGrid"></div>
+        </section>
+      </aside>
+    </div>
+
+    <section class="card sources">
+      <p><strong>計算について：</strong>各項目を独立した二項分布として扱う近似判別です。表示値は真の設定確率ではなく、入力データに対する設定間の相対尤度です。同じ当選が複数項目に含まれる場合や内部状態の見誤りで偏るため、ホールでの結果を保証しません。</p>
+      <p><strong>解析値：</strong><a href="https://www.p-world.co.jp/machine/database/10483" target="_blank" rel="noopener">P-WORLD 機種データ</a> ／ <a href="https://1geki.jp/slot/l_sao2/0/" target="_blank" rel="noopener">一撃 設定差・設定示唆まとめ</a>（2026年9月24日確認）</p>
+    </section>
+    <footer>非公式の設定判別補助ツールです。遊技は余裕を持ってお楽しみください。</footer>
+  </main>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+  (()=>{
+    "use strict";
+    const $=s=>document.querySelector(s),storageKey="sao2-setting-analyzer-v1";
+    const specs=[
+      {setting:1,cz:238.4,at:386.2,strongB:1057.0,direct:18091.8,scSuika:.402,czLow:.20,czHigh:.50,theEnd:.004,item:.203,buggy:.40,payout:97.6},
+      {setting:2,cz:232.3,at:364.3,strongB:993.0,direct:14160.5,scSuika:.445,czLow:.21,czHigh:.51,theEnd:.008,item:.211,buggy:.60,payout:98.8},
+      {setting:3,cz:232.7,at:368.1,strongB:936.2,direct:14390.8,scSuika:.410,czLow:.20,czHigh:.52,theEnd:.008,item:.219,buggy:.40,payout:100.2},
+      {setting:4,cz:218.9,at:326.8,strongB:885.6,direct:8498.0,scSuika:.484,czLow:.25,czHigh:.55,theEnd:.016,item:.227,buggy:.60,payout:105.3},
+      {setting:5,cz:225.2,at:340.6,strongB:840.2,direct:4723.3,scSuika:.422,czLow:.20,czHigh:.58,theEnd:.023,item:.250,buggy:.40,payout:110.4},
+      {setting:6,cz:191.7,at:269.6,strongB:799.2,direct:3415.7,scSuika:.551,czLow:.33,czHigh:.60,theEnd:.051,item:.301,buggy:.60,payout:114.9}
+    ];
+    const coreFields=[
+      {id:"games",label:"通常時ゲーム数",hint:"AT・CZ中を除いた目安",step:100,full:true},
+      {id:"cz",label:"CZ初当り",hint:"スコードロンバトル",step:1,theory:"設定1 1/238.4"},
+      {id:"at",label:"AT初当り",hint:"引き戻しを含め同条件で統一",step:1,theory:"設定1 1/386.2"},
+      {id:"strongB",label:"強チャンス目B",hint:"強チャンス目Aと混同注意",step:1,theory:"設定1 1/1057.0"},
+      {id:"direct",label:"詩乃モードAT直撃",hint:"天井・引き戻し等は除外",step:1,theory:"設定1 1/18091.8"}
+    ];
+    const events=[
+      {id:"sc",label:"低確スイカ → SC",note:"スイカ成立回数 / SC当選",trial:"scTrials",hit:"scHits",key:"scSuika"},
+      {id:"czLow",label:"低確・強チェリー → CZ",note:"強チェリー成立 / CZ当選",trial:"czLowTrials",hit:"czLowHits",key:"czLow"},
+      {id:"czHigh",label:"高確・強チェリー → CZ",note:"強チェリー成立 / CZ当選",trial:"czHighTrials",hit:"czHighHits",key:"czHigh"},
+      {id:"theEnd",label:"強チャンス目 → THE END",note:"A・B成立 / 確定CZ当選",trial:"theEndTrials",hit:"theEndHits",key:"theEnd"},
+      {id:"item",label:"CZ失敗 → アイテム",note:"CZ失敗 / アイテム獲得",trial:"itemTrials",hit:"itemHits",key:"item"}
+    ];
+    const stageFields=[
+      {id:"wilderness",label:"荒野ステージ",hint:"奇数設定 60% / 偶数 40%",step:1},
+      {id:"buggy",label:"バギーステージ",hint:"奇数設定 40% / 偶数 60%",step:1}
+    ];
+    const hints=[
+      {value:"0",title:"なし",sub:"数値データのみで判別",min:1,label:""},
+      {value:"2",title:"ワイシャツ",sub:"設定2以上濃厚",min:2,label:"設定2以上濃厚"},
+      {value:"3",title:"お風呂",sub:"設定3以上濃厚",min:3,label:"設定3以上濃厚"},
+      {value:"4",title:"水着 / 詩乃・ユイ",sub:"設定4以上濃厚",min:4,label:"設定4以上濃厚"},
+      {value:"6",title:"パジャマ / シノン&キリト / アスナ&ユウキ",sub:"設定6濃厚",min:6,label:"設定6濃厚"}
+    ];
+    const defaults={hint:"0"};
+    [...coreFields,...stageFields].forEach(x=>defaults[x.id]=0);events.forEach(x=>{defaults[x.trial]=0;defaults[x.hit]=0});
+    let state={...defaults,...load()};
+
+    function load(){try{return JSON.parse(localStorage.getItem(storageKey)||"{}")||{}}catch{return{}}}
+    function save(show=false){try{localStorage.setItem(storageKey,JSON.stringify(state));if(show)toast("入力データを端末に保存しました")}catch{if(show)toast("保存できませんでした")}}
+    function num(id){return Math.max(0,Math.floor(Number(state[id])||0))}
+    function fieldHTML(f){return `<div class="field${f.full?" full":""}"><div class="field-top"><div><label for="${f.id}">${f.label}</label><span class="field-hint">${f.hint}</span></div>${f.theory?`<span class="theory">${f.theory}</span>`:""}</div><div class="counter"><button type="button" data-count="${f.id}" data-delta="-${f.step}" aria-label="${f.label}を減らす">−</button><input id="${f.id}" data-input="${f.id}" type="number" inputmode="numeric" min="0" step="${f.step}" value="${num(f.id)}"><button type="button" data-count="${f.id}" data-delta="${f.step}" aria-label="${f.label}を増やす">＋</button></div></div>`}
+    function renderForm(){
+      $("#coreFields").innerHTML=coreFields.map(fieldHTML).join("");
+      $("#stageFields").innerHTML=stageFields.map(fieldHTML).join("");
+      $("#eventFields").innerHTML=events.map(e=>`<div class="event"><div class="event-head"><strong>${e.label}</strong><span>${e.note}</span></div><div class="event-inputs"><div class="compact"><label for="${e.trial}">分母</label><input id="${e.trial}" data-input="${e.trial}" type="number" inputmode="numeric" min="0" value="${num(e.trial)}"></div><span class="slash">中</span><div class="compact"><label for="${e.hit}">当選</label><input id="${e.hit}" data-input="${e.hit}" type="number" inputmode="numeric" min="0" value="${num(e.hit)}"></div></div><p class="invalid" id="${e.id}Error" hidden>当選回数は分母以下で入力してください。</p></div>`).join("");
+      $("#hintFields").innerHTML=hints.map(h=>`<div class="hint-option"><input type="radio" name="hint" id="hint${h.value}" value="${h.value}" ${String(state.hint)===h.value?"checked":""}><label for="hint${h.value}">${h.title}<small>${h.sub}</small></label></div>`).join("");
+      $("#specBody").innerHTML=specs.map(s=>`<tr data-spec="${s.setting}"><td>設定${s.setting}</td><td>1/${s.cz}</td><td>1/${s.at}</td><td>1/${s.strongB}</td><td>1/${s.direct}</td><td>${s.payout}%</td></tr>`).join("");
+    }
+    function logBernoulli(n,k,p){if(n<=0||k<0||k>n)return 0;p=Math.min(.999999,Math.max(.000001,p));return k*Math.log(p)+(n-k)*Math.log(1-p)}
+    function rateText(k,n){return n>0&&k>0?`1/${(n/k).toFixed(1)}`:n>0?"当選なし":"—"}
+    function pct(k,n){return n>0?`${(k/n*100).toFixed(1)}%`:"—"}
+    function nearestByRate(k,n,key,inverse=false){if(!n||k<0||k>n)return"—";const actual=k/n;let best=specs[0],gap=Infinity;specs.forEach(s=>{const p=inverse?1/s[key]:s[key],g=Math.abs(actual-p);if(g<gap){gap=g;best=s}});return`設定${best.setting}付近`}
+    function analyze(){
+      const games=num("games"),hint=hints.find(h=>h.value===String(state.hint))||hints[0];let evidence=0,invalid=0;
+      const logs=specs.map(s=>s.setting<hint.min?-Infinity:0);
+      const addGames=(count,key)=>{if(!games)return;const k=num(count);if(k>games){invalid++;return}specs.forEach((s,i)=>{if(Number.isFinite(logs[i]))logs[i]+=logBernoulli(games,k,1/s[key])});evidence++};
+      addGames("cz","cz");addGames("at","at");addGames("strongB","strongB");addGames("direct","direct");
+      events.forEach(e=>{const n=num(e.trial),k=num(e.hit),bad=k>n;$("#"+e.id+"Error").hidden=!bad;if(!n||bad){if(bad)invalid++;return}specs.forEach((s,i)=>{if(Number.isFinite(logs[i]))logs[i]+=logBernoulli(n,k,s[e.key])});evidence++});
+      const wild=num("wilderness"),buggy=num("buggy"),stageN=wild+buggy;if(stageN){specs.forEach((s,i)=>{if(Number.isFinite(logs[i]))logs[i]+=logBernoulli(stageN,buggy,s.buggy)});evidence++}
+      const finite=logs.filter(Number.isFinite),max=finite.length?Math.max(...finite):0,weights=logs.map(v=>Number.isFinite(v)?Math.exp(v-max):0),sum=weights.reduce((a,b)=>a+b,0)||1,probs=weights.map(v=>v/sum);
+      let bestIndex=0;probs.forEach((p,i)=>{if(p>probs[bestIndex])bestIndex=i});const best=specs[bestIndex],numericData=evidence>0;
+      const high4=probs.slice(3).reduce((a,b)=>a+b,0),high5=probs.slice(4).reduce((a,b)=>a+b,0),expected=probs.reduce((a,p,i)=>a+p*specs[i].payout,0);
+      const label=!numericData?(hint.min>1?`設定${hint.min}以上`:"判別待ち"):`設定${best.setting}`;
+      $("#resultSetting").textContent=label;$("#heroSetting").textContent=!numericData&&hint.min===1?"—":hint.min===6?"6":numericData?best.setting:`${hint.min}+`;
+      $("#heroSub").textContent=!numericData?(hint.label||"データ入力待ち"):`相対期待度 ${(probs[bestIndex]*100).toFixed(1)}%`;
+      $("#resultScore").textContent=numericData?`${(probs[bestIndex]*100).toFixed(1)}%`:"—";$("#high4").textContent=numericData||hint.min>1?`${(high4*100).toFixed(1)}%`:"—";$("#high5").textContent=numericData||hint.min>1?`${(high5*100).toFixed(1)}%`:"—";$("#expectedPay").textContent=numericData||hint.min>1?`${expected.toFixed(1)}%`:"—";
+      $("#probList").innerHTML=specs.map((s,i)=>`<div class="prob-row ${i===bestIndex&&numericData?"best":""}"><strong>設定${s.setting}</strong><div class="track"><div class="fill" style="width:${(probs[i]*100).toFixed(2)}%"></div></div><output>${(probs[i]*100).toFixed(1)}%</output></div>`).join("");
+      document.querySelectorAll("[data-spec]").forEach(tr=>tr.classList.toggle("highlight",Number(tr.dataset.spec)===best.setting&&numericData));
+      renderSample(games,stageN,invalid,evidence);renderSignals(best,hint,games,stageN);renderCompare(games,stageN);save();
+    }
+    function renderSample(games,stageN,invalid,evidence){const eventTrials=events.reduce((a,e)=>a+num(e.trial),0),score=Math.min(100,games/80+eventTrials*1.2+stageN*2);let rank="データ待ち",text="数値を入力すると自動で判別します。";if(evidence){if(score<30){rank="参考レベル";text="まだブレやすいサンプル量です。"}else if(score<65){rank="サンプル中";text="複数の判別要素を合わせて確認してください。"}else{rank="サンプル多め";text="精度は上がりますが、独立近似である点に注意。"}}if(invalid){rank="入力確認";text="回数の大小関係に誤りがある項目は計算から除外中です。"}$("#sampleRank").textContent=rank;$("#sampleText").textContent=text}
+    function renderSignals(best,hint,games,stageN){const rows=[];if(hint.min>1)rows.push(`<strong>${hint.label}</strong>を反映して設定${hint.min}未満を除外`);if(games&&num("at"))rows.push(`AT実測 <strong>${rateText(num("at"),games)}</strong> / 推定設定${best.setting}解析 1/${best.at}`);if(games&&num("cz"))rows.push(`CZ実測 <strong>${rateText(num("cz"),games)}</strong> / 推定設定${best.setting}解析 1/${best.cz}`);if(games&&num("strongB"))rows.push(`強チャンス目B <strong>${rateText(num("strongB"),games)}</strong> / 解析 1/${best.strongB}`);if(num("direct"))rows.push(`詩乃モード直撃 <strong>${num("direct")}回</strong>は高設定ほど強い材料`);if(stageN)rows.push(`バギー比率 <strong>${pct(num("buggy"),stageN)}</strong> / 設定${best.setting}解析 ${(best.buggy*100).toFixed(0)}%`);if(!rows.length)rows.push("ゲーム数と各回数を入力すると、注目ポイントを表示します。");$("#signals").innerHTML=rows.slice(0,4).map(x=>`<li>${x}</li>`).join("")}
+    function renderCompare(games,stageN){const items=[
+      {label:"CZ初当り",value:rateText(num("cz"),games),near:nearestByRate(num("cz"),games,"cz",true)},
+      {label:"AT初当り",value:rateText(num("at"),games),near:nearestByRate(num("at"),games,"at",true)},
+      {label:"強チャンス目B",value:rateText(num("strongB"),games),near:nearestByRate(num("strongB"),games,"strongB",true)},
+      {label:"バギー選択",value:pct(num("buggy"),stageN),near:stageN?(num("buggy")/stageN>=.5?"偶数設定寄り":"奇数設定寄り"):"—"}
+    ];$("#compareGrid").innerHTML=items.map(x=>`<div class="compare"><span>${x.label}</span><b>${x.value}</b><small>${x.near}</small></div>`).join("")}
+    function toast(message){const el=$("#toast");el.textContent=message;el.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove("show"),1700)}
+    document.addEventListener("click",e=>{const b=e.target.closest("[data-count]");if(!b)return;const id=b.dataset.count;state[id]=Math.max(0,num(id)+Number(b.dataset.delta));const input=document.querySelector(`[data-input="${id}"]`);if(input)input.value=state[id];analyze()});
+    document.addEventListener("input",e=>{if(e.target.matches("[data-input]")){state[e.target.dataset.input]=Math.max(0,Number(e.target.value)||0);analyze()}if(e.target.name==="hint"){state.hint=e.target.value;analyze()}});
+    $("#saveButton").addEventListener("click",()=>save(true));
+    $("#resetButton").addEventListener("click",()=>{if(!confirm("入力データをすべてリセットしますか？"))return;state={...defaults};save();renderForm();analyze();toast("入力をリセットしました")});
+    renderForm();analyze();
+  })();
+  </script>
+</body>
+</html>
