@@ -1,27 +1,9 @@
 {
-  "sao2-setting.html": {
-    "name": "SAO2 設定判別 | GGO ANALYZER",
-    "icon": "🎯",
-    "description": "スマスロ ソードアート・オンラインIIの解析値を使い、実戦データから設定1～6の相対期待度を計算する設定判別ツール。",
-    "category": "スロット"
-  },
-  "tact.html": {
-    "name": "小役リズムジャッジ | Occult Tact Trainer",
-    "icon": "📱",
-    "description": "スマスロ takt op. 風の小役オカルト体感トレーナー。子役確率を編集してリズム判定と期待値確認ができます。",
-    "category": "アプリ"
-  },
-  "takuate.html": {
-    "name": "スロット2択 オカルトナビゲーター",
-    "icon": "📱",
-    "description": "生成AIで作成したツールです。",
-    "category": "アプリ"
-  },
-  "tact-zurashi.html": {
-    "name": "運命乱数ずらし | takt op. Destiny",
-    "icon": "🎼",
-    "description": "スマスロ takt op.Destiny の乱数ずらしと、報酬CHANCE・報酬JUDGEの3G STを体感できる練習ツール。",
-    "category": "スロット"
+  "sao-yozora-zurashi.html": {
+    "name": "夜空乱数トレーナー | SAO Alicization",
+    "icon": "⚔️",
+    "description": "e ソードアート・オンライン アリシゼーション 夜空の大当り確率に合わせた乱数ずらしとRUSH体感ツール。",
+    "category": "パチンコ"
   },
   "game.html": {
     "name": "10-in-1 Web Arcade",
@@ -29,11 +11,29 @@
     "description": "生成AIで作成したツールです。",
     "category": "アプリ"
   },
-  "isekaru.html": {
-    "name": "異世界乱数ずらし",
+  "sao2-bullet-occult.html": {
+    "name": "SAO2 バレット目オカルトナビ",
+    "icon": "🎯",
+    "description": "スマスロ ソードアート・オンラインIIのバレット目A～Eや緑7・BAR図柄を指定し、オカルトのレバーONタイミングを楽しむ非公式ツール。",
+    "category": "スロット"
+  },
+  "subscManeger.html": {
+    "name": "My Subsc Manager",
     "icon": "📱",
     "description": "生成AIで作成したツールです。",
     "category": "アプリ"
+  },
+  "tact.html": {
+    "name": "小役リズムジャッジ | Occult Tact Trainer",
+    "icon": "📱",
+    "description": "スマスロ takt op. 風の小役オカルト体感トレーナー。子役確率を編集してリズム判定と期待値確認ができます。",
+    "category": "アプリ"
+  },
+  "sao2-setting.html": {
+    "name": "SAO2 設定判別 | GGO ANALYZER",
+    "icon": "🎯",
+    "description": "スマスロ ソードアート・オンラインIIの解析値を使い、実戦データから設定1～6の相対期待度を計算する設定判別ツール。",
+    "category": "スロット"
   },
   "hamari.html": {
     "name": "hamari",
@@ -47,20 +47,20 @@
     "description": "生成AIで作成したツールです。",
     "category": "アプリ"
   },
-  "sao2-bullet-occult.html": {
-    "name": "SAO2 バレット目オカルトナビ",
-    "icon": "🎯",
-    "description": "スマスロ ソードアート・オンラインIIのバレット目A～Eや緑7・BAR図柄を指定し、オカルトのレバーONタイミングを楽しむ非公式ツール。",
+  "isekaru.html": {
+    "name": "異世界乱数ずらし",
+    "icon": "📱",
+    "description": "生成AIで作成したツールです。",
+    "category": "アプリ"
+  },
+  "tact-zurashi.html": {
+    "name": "運命乱数ずらし | takt op. Destiny",
+    "icon": "🎼",
+    "description": "スマスロ takt op.Destiny の乱数ずらしと、報酬CHANCE・報酬JUDGEの3G STを体感できる練習ツール。",
     "category": "スロット"
   },
-  "sao-yozora-zurashi.html": {
-    "name": "夜空乱数トレーナー | SAO Alicization",
-    "icon": "⚔️",
-    "description": "e ソードアート・オンライン アリシゼーション 夜空の大当り確率に合わせた乱数ずらしとRUSH体感ツール。",
-    "category": "パチンコ"
-  },
-  "subscManeger.html": {
-    "name": "My Subsc Manager",
+  "takuate.html": {
+    "name": "スロット2択 オカルトナビゲーター",
     "icon": "📱",
     "description": "生成AIで作成したツールです。",
     "category": "アプリ"
