@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="スマスロ リコリス・リコイルの主要小役を指定し、オカルトのレバーONタイミングと停止形を楽しむ非公式ツール。">
+  <meta name="icon" content="🎯">
+  <meta name="category" content="スロット">
+  <meta name="theme-color" content="#090a0e">
+  <title>リコリコ 小役オカルトナビ | LYCORIS TRIGGER</title>
+  <style>
+    :root{color-scheme:dark;--bg:#090a0e;--panel:#11141b;--panel2:#171c25;--line:rgba(255,255,255,.1);--text:#f7f7f3;--muted:#9299a6;--red:#ff5267;--red2:#a8132d;--cyan:#5ce7ed;--green:#62e69a;--yellow:#ffd76e;--blue:#7da9ff;--shadow:0 25px 85px rgba(0,0,0,.46);font-family:Inter,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
+    *{box-sizing:border-box}html{min-height:100%;background:var(--bg)}body{min-height:100vh;margin:0;color:var(--text);background:radial-gradient(circle at 13% 0,rgba(220,25,55,.25),transparent 31rem),radial-gradient(circle at 96% 44%,rgba(56,211,222,.09),transparent 26rem),linear-gradient(145deg,#08090c,#0d1016 55%,#0b0b10);overflow-x:hidden}body::before{position:fixed;inset:0;z-index:-1;content:"";background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(#000,transparent 92%);pointer-events:none}button{font:inherit;color:inherit}.app{width:min(1050px,100%);margin:auto;padding:17px clamp(11px,3vw,27px) 46px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 2px 17px}.brand{display:flex;align-items:center;gap:10px}.brand-mark{position:relative;display:grid;place-items:center;width:42px;height:42px;border:1px solid rgba(255,82,103,.42);border-radius:50%;color:#fff;background:rgba(255,82,103,.1);box-shadow:0 0 25px rgba(255,82,103,.16);font-size:16px}.brand-mark::after{position:absolute;width:7px;height:7px;border:1px solid var(--red);border-radius:50%;content:""}.brand strong{display:block;font-size:12px;letter-spacing:.13em}.brand small{display:block;margin-top:3px;color:var(--muted);font-size:8px;letter-spacing:.11em}.back{padding:8px 11px;border:1px solid var(--line);border-radius:999px;color:#c3c8cf;text-decoration:none;font-size:9px;font-weight:900}.hero{position:relative;display:grid;grid-template-columns:1.15fr .85fr;gap:20px;min-height:270px;padding:clamp(23px,4.5vw,46px);overflow:hidden;border:1px solid rgba(255,102,120,.2);border-radius:30px;background:linear-gradient(135deg,rgba(31,23,29,.98),rgba(12,14,19,.99));box-shadow:var(--shadow)}.hero::before{position:absolute;top:-140px;right:17%;width:380px;height:380px;border:1px solid rgba(255,82,103,.12);border-radius:50%;content:"";box-shadow:0 0 0 45px rgba(255,82,103,.025),0 0 0 92px rgba(255,255,255,.012)}.eyebrow{margin:0 0 11px;color:#ff8091;font-size:9px;font-weight:950;letter-spacing:.2em}.hero h1{margin:0;font-size:clamp(34px,6vw,58px);line-height:.96;letter-spacing:-.055em}.hero h1 em{display:block;margin-top:9px;color:transparent;background:linear-gradient(90deg,#ff536a,#ff9aa8 47%,#73eaf0);background-clip:text;font-style:normal}.hero-copy{max-width:575px;margin:18px 0 0;color:#b1b5bd;font-size:12px;line-height:1.85}.notice{display:inline-flex;align-items:center;gap:7px;margin-top:18px;padding:7px 10px;border:1px solid rgba(255,215,110,.17);border-radius:9px;color:#d9c67e;background:rgba(255,215,110,.045);font-size:8px;font-weight:800}.scope{position:relative;display:grid;place-items:center;min-height:190px}.scope-ring{position:absolute;width:190px;height:190px;border:1px solid rgba(255,82,103,.3);border-radius:50%;box-shadow:0 0 0 22px rgba(255,82,103,.026),0 0 0 46px rgba(255,255,255,.011)}.scope-ring::before,.scope-ring::after{position:absolute;background:rgba(255,82,103,.33);content:""}.scope-ring::before{top:50%;left:-18px;width:224px;height:1px}.scope-ring::after{top:-18px;left:50%;width:1px;height:224px}.scope-core{position:relative;text-align:center}.scope-core span{display:block;color:#898f9b;font-size:8px;font-weight:900;letter-spacing:.18em}.scope-core b{display:block;max-width:170px;margin:9px auto 4px;color:#ff6b7e;font-size:clamp(34px,6vw,54px);line-height:.95;text-shadow:0 0 26px rgba(255,82,103,.28)}.scope-core small{color:#e9e9e5;font-size:9px;font-weight:900}.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:16px}.stack{display:grid;align-content:start;gap:16px}.card{border:1px solid var(--line);border-radius:22px;background:linear-gradient(155deg,rgba(23,27,36,.97),rgba(12,14,19,.99));box-shadow:0 17px 50px rgba(0,0,0,.25)}.pad{padding:20px}.section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:15px}.section-head h2{margin:0;font-size:17px}.section-head p{margin:5px 0 0;color:var(--muted);font-size:10px;line-height:1.65}.index{flex:none;color:rgba(255,103,121,.62);font-size:9px;font-weight:900;letter-spacing:.14em}.targets{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.target{min-width:0;padding:12px 5px 10px;border:1px solid rgba(255,255,255,.09);border-radius:13px;background:#181d27;cursor:pointer;text-align:center}.target b{display:block;color:#d8d9dc;font-size:13px}.target span{display:block;margin-top:4px;color:#747d8b;font-size:7px;line-height:1.35}.target small{display:block;margin-top:7px;color:#b9c0ca;font-size:9px;font-weight:900}.target.selected{border-color:var(--target-color,var(--red));background:linear-gradient(145deg,color-mix(in srgb,var(--target-color,var(--red)) 18%,#181d27),#181d27);box-shadow:0 0 0 3px color-mix(in srgb,var(--target-color,var(--red)) 9%,transparent),inset 0 0 25px color-mix(in srgb,var(--target-color,var(--red)) 8%,transparent)}.target.selected b{color:var(--target-color,var(--red))}.reels{display:grid;grid-template-columns:40px repeat(3,1fr);gap:6px;margin-top:15px}.reel-label,.row-label{display:grid;place-items:center;color:#747d8a;font-size:8px;font-weight:900}.reel-cell{position:relative;display:grid;place-items:center;min-height:52px;border:1px solid rgba(255,255,255,.075);border-radius:10px;color:#3e4652;background:rgba(7,9,13,.72);font-size:9px;font-weight:950;overflow:hidden}.reel-cell::before{position:absolute;inset:5px;border:1px dashed rgba(255,255,255,.07);border-radius:8px;content:""}.reel-cell.active{border-color:color-mix(in srgb,var(--active-color,var(--red)) 60%,transparent);color:#fff;background:radial-gradient(circle,color-mix(in srgb,var(--active-color,var(--red)) 38%,#171b24),#0d1118 67%);box-shadow:0 0 18px color-mix(in srgb,var(--active-color,var(--red)) 17%,transparent)}.reel-symbol{position:relative;z-index:1;display:grid;place-items:center;min-width:35px;height:28px;padding:0 5px;border-radius:7px;border:1px solid rgba(255,255,255,.2);color:#fff;background:#1a202b;font-size:9px;font-weight:1000}.reel-symbol.replay{color:#d8ebff;background:linear-gradient(145deg,#477dc7,#1b3e73)}.reel-symbol.cherry{color:#fff;background:linear-gradient(145deg,#ff5369,#8e1025)}.reel-symbol.suika{color:#ecfff3;background:linear-gradient(145deg,#52dc8f,#17623c)}.reel-symbol.convert{color:#15171b;background:linear-gradient(145deg,#f5f4ee,#9ea5ad);font-size:8px}.reel-symbol.bar{color:#fff1a5;background:linear-gradient(#1d1d22 0 27%,#d8b84e 28% 37%,#07080a 38% 62%,#d8b84e 63% 72%,#1d1d22 73%);font-family:Arial Black,Impact,sans-serif;font-size:8px}.pattern-note{margin:11px 0 0;padding:10px 12px;border-left:2px solid var(--target-color,var(--red));border-radius:4px 10px 10px 4px;color:#9ea5b0;background:rgba(255,255,255,.025);font-size:9px;line-height:1.65}.pattern-note strong{color:#f0f1ef}.console{position:relative;padding:22px;border-color:rgba(255,82,103,.25);background:linear-gradient(155deg,rgba(36,24,31,.99),rgba(11,13,18,.99));overflow:hidden}.console::after{position:absolute;right:-80px;bottom:-90px;width:230px;height:230px;border:1px solid rgba(92,231,237,.08);border-radius:50%;content:""}.phase{position:relative;min-height:202px;display:grid;place-items:center;text-align:center}.phase-kicker{color:#878e9a;font-size:8px;font-weight:950;letter-spacing:.2em}.phase-value{display:block;margin:9px 0 6px;color:#ff6478;font-size:clamp(48px,9vw,78px);font-weight:1000;line-height:.92;letter-spacing:-.05em;text-shadow:0 0 28px rgba(255,82,103,.24)}.phase-value.fire{color:#fff;text-shadow:0 0 16px var(--red),0 0 42px rgba(255,82,103,.72);animation:fire .62s ease-in-out infinite alternate}.phase-message{max-width:340px;color:#a3a9b2;font-size:10px;line-height:1.6}.progress{height:6px;overflow:hidden;border-radius:99px;background:#20242d}.progress-fill{width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#ae1730,#ff5b70,#72eaf0);transition:width .08s linear}.routine{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:13px}.routine div{padding:10px 5px;border:1px solid rgba(255,255,255,.075);border-radius:11px;text-align:center;background:rgba(6,8,12,.48)}.routine span{display:block;color:#737c89;font-size:7px;font-weight:900}.routine b{display:block;margin-top:4px;color:#eff0ed;font-size:11px}.start{position:relative;width:100%;min-height:54px;margin-top:12px;border:0;border-radius:14px;color:#fff;background:linear-gradient(120deg,#a91430,#ff5369 58%,#ff8e9d);box-shadow:0 12px 34px rgba(221,35,64,.2);cursor:pointer;font-size:12px;font-weight:950;letter-spacing:.05em}.start:active{transform:scale(.985)}.start.running{color:#b8bec8;background:#242933;box-shadow:none}.result-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}.result-actions button{min-height:44px;border:1px solid rgba(255,255,255,.09);border-radius:12px;background:#1b202a;cursor:pointer;font-size:10px;font-weight:900}.result-actions .hit{border-color:rgba(98,230,154,.3);color:var(--green);background:rgba(98,230,154,.06)}.result-actions button:disabled{cursor:not-allowed;opacity:.33}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{padding:13px 6px;border:1px solid rgba(255,255,255,.075);border-radius:13px;text-align:center;background:rgba(6,8,12,.5)}.stat b{display:block;color:#f0f1ef;font-size:20px}.stat span{display:block;margin-top:4px;color:#707987;font-size:7px;font-weight:900}.history{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;min-height:27px}.history span{display:inline-flex;align-items:center;gap:4px;padding:5px 7px;border-radius:999px;color:#858d99;background:#191d25;font-size:8px;font-weight:900}.history .win{color:var(--green);background:rgba(98,230,154,.07)}.reset{width:100%;min-height:38px;margin-top:11px;border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#858d99;background:#191e27;cursor:pointer;font-size:9px;font-weight:900}.rates{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.rate{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 11px;border:1px solid rgba(255,255,255,.07);border-radius:11px;background:rgba(7,9,13,.48)}.rate span{color:#8f97a3;font-size:8px;font-weight:800}.rate b{font-size:11px}.guide{margin:0;padding-left:18px;color:#929aa6;font-size:10px;line-height:1.8}.guide strong{color:#eceeeb}.sources{margin-top:16px;padding:16px 19px;color:#7d8591;font-size:9px;line-height:1.75}.sources p{margin:0}.sources p+p{margin-top:7px}.sources strong{color:#c8ccd1}.sources a{color:#75e3e8}footer{padding:17px 3px 0;color:#575e68;text-align:center;font-size:8px;line-height:1.7}.toast{position:fixed;right:16px;bottom:16px;z-index:20;padding:10px 13px;border:1px solid rgba(255,82,103,.25);border-radius:11px;color:#f7eef0;background:rgba(14,15,20,.97);box-shadow:var(--shadow);font-size:9px;font-weight:900;opacity:0;transform:translateY(7px);pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:none}@keyframes fire{to{transform:scale(1.055)}}
+    @media(max-width:760px){.hero{grid-template-columns:1fr}.scope{min-height:176px}.layout{grid-template-columns:1fr}.console{order:-1}}
+    @media(max-width:480px){.app{padding:10px 9px 30px}.topbar{padding-bottom:12px}.brand strong{font-size:10px}.hero{padding:22px 16px;border-radius:22px}.hero h1{font-size:36px}.card{border-radius:18px}.pad,.console{padding:15px}.targets{gap:4px}.target{padding:11px 3px 9px}.target b{font-size:11px}.reels{grid-template-columns:31px repeat(3,1fr);gap:4px}.reel-cell{min-height:50px}.phase{min-height:184px}.routine{gap:4px}.routine b{font-size:10px}}
+    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">＋</span><div><strong>LYCORIS TRIGGER SYSTEM</strong><small>ROLE LOCK / OCCULT TIMING</small></div></div>
+      <a class="back" href="../index.html">ツール一覧へ</a>
+    </header>
+
+    <section class="hero">
+      <div>
+        <p class="eyebrow">SMART PACHISLOT / LYCORIS RECOIL</p>
+        <h1>小役狙い<em>オカルトナビ</em></h1>
+        <p class="hero-copy">引きたい小役を選ぶと、深呼吸・タメ・レバーONのタイミングを毎回ランダムに生成。停止形の例と公表確率を、キーボード操作なしで確認できます。</p>
+        <span class="notice">⚠ 娯楽用です。実機の抽選・停止確率・結果は変化しません。</span>
+      </div>
+      <div class="scope" aria-label="選択中の小役">
+        <div class="scope-ring" aria-hidden="true"></div>
+        <div class="scope-core"><span>CURRENT MISSION</span><b id="heroTarget">弱リコリス目</b><small id="heroOdds">1/50.3</small></div>
+      </div>
+    </section>
+
+    <div class="layout">
+      <div class="stack">
+        <section class="card pad">
+          <div class="section-head"><div><h2>狙う小役</h2><p>6種類からタップで指定します。</p></div><span class="index">01 / TARGET</span></div>
+          <div class="targets" id="targets"></div>
+          <div class="reels" id="reels" aria-label="選択した小役の停止形例"></div>
+          <p class="pattern-note" id="patternNote"></p>
+        </section>
+
+        <section class="card pad">
+          <div class="section-head"><div><h2>自己申告ログ</h2><p>ナビ後の結果を小役ごとに端末保存します。</p></div><span class="index">02 / LOG</span></div>
+          <div class="stats"><div class="stat"><b id="attempts">0</b><span>チャレンジ</span></div><div class="stat"><b id="hits">0</b><span>的中</span></div><div class="stat"><b id="hitRate">—</b><span>自己申告率</span></div></div>
+          <div class="history" id="history"><span>まだ記録がありません</span></div>
+          <button class="reset" id="resetLog" type="button">選択中の記録をリセット</button>
+        </section>
+
+        <section class="card pad">
+          <div class="section-head"><div><h2>使い方</h2><p>実機のルールを優先してください。</p></div><span class="index">GUIDE</span></div>
+          <ol class="guide">
+            <li>引きたい小役をタップ。</li>
+            <li>「タイミングナビ開始」を押して表示に合わせる。</li>
+            <li><strong>押し順ナビと左1stを最優先</strong>し、「LEVER ON」で操作。</li>
+            <li>結果を「引けた／引けなかった」で記録。</li>
+          </ol>
+        </section>
+      </div>
+
+      <div class="stack">
+        <section class="card console" aria-live="polite">
+          <div class="section-head"><div><h2>トリガーコンソール</h2><p>毎回違うルーティンを生成します。</p></div><span class="index">LIVE</span></div>
+          <div class="phase"><div><span class="phase-kicker" id="phaseKicker">MISSION LOCKED</span><strong class="phase-value" id="phaseValue">READY</strong><p class="phase-message" id="phaseMessage">姿勢を整えたらナビを開始してください。</p></div></div>
+          <div class="progress" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
+          <div class="routine"><div><span>BREATH</span><b id="routineBreath">2回</b></div><div><span>WAIT</span><b id="routineWait">—</b></div><div><span>FOCUS</span><b id="routineFocus">左リールBAR</b></div></div>
+          <button class="start" id="startButton" type="button">タイミングナビ開始</button>
+          <div class="result-actions"><button class="hit" id="recordHit" type="button" disabled>◎ 引けた</button><button id="recordMiss" type="button" disabled>× 引けなかった</button></div>
+        </section>
+
+        <section class="card pad">
+          <div class="section-head"><div><h2>小役確率</h2><p>全設定共通の公表値。</p></div><span class="index">RATE</span></div>
+          <div class="rates" id="rates"></div>
+        </section>
+      </div>
+    </div>
+
+    <section class="card sources">
+      <p><strong>重要：</strong>本ツールはランダムなタイミング表示だけを行います。小役は実機内部の抽選で決まり、当選保証や確率上昇はありません。停止形は一例です。</p>
+      <p><strong>確率・停止形：</strong><a href="https://www.p-world.co.jp/machine/database/10503" target="_blank" rel="noopener">P-WORLD 機種データ</a> ／ <a href="https://1geki.jp/slot/l_lycoreco/2/" target="_blank" rel="noopener">一撃 打ち方・停止形</a>（2026年9月25日確認）</p>
+    </section>
+    <footer>非公式の娯楽用オカルトツールです。遊技は余裕を持ってお楽しみください。</footer>
+  </main>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+  (()=>{
+    "use strict";
+    const $=s=>document.querySelector(s),storageKey="lycoreco-occult-v1";
+    const roles={
+      replay:{label:"リプレイ",short:"RP",odds:"1/7.3",color:"#7da9ff",hint:"通常リプレイ",note:"リプレイ停止形のイメージ。実機ではリプレイ＋レア役合算が1/5.5。",pattern:{lm:["RP","replay"],mm:["RP","replay"],rm:["RP","replay"]}},
+      cherry:{label:"チェリー",short:"CH",odds:"1/89.2",color:"#ff5369",hint:"3枚・弱レア役",note:"左リールにチェリー図柄が停止。右リール中段の停止形で判別します。",pattern:{ll:["CHERRY","cherry"]}},
+      suika:{label:"スイカ",short:"SW",odds:"1/89.2",color:"#62e69a",hint:"3枚・弱レア役",note:"スイカが右下がり一直線に停止。中・右リールもBARを目安にフォロー。",pattern:{lu:["SUIKA","suika"],mm:["SUIKA","suika"],rl:["SUIKA","suika"]}},
+      weak:{label:"弱リコリス目",short:"弱リコ",odds:"1/50.3",color:"#5ce7ed",hint:"1枚・変換図柄",note:"中段に「リプレイ／リプレイ／変換」図柄が停止。",pattern:{lm:["RP","replay"],mm:["RP","replay"],rm:["変換","convert"]}},
+      strong:{label:"強リコリス目",short:"強リコ",odds:"1/728.2",color:"#ffd76e",hint:"1枚・強レア役",note:"中段以外に「リプレイ／リプレイ／変換」が停止。表示は停止形の一例です。",pattern:{lu:["RP","replay"],mu:["RP","replay"],ru:["変換","convert"]}},
+      middle:{label:"中段チェリー",short:"中チェ",odds:"1/16384.0",color:"#ff7fd4",hint:"15枚・プレミア",note:"左リール中段にチェリー停止。中・右は狙えばBARが一直線に揃います。",pattern:{lm:["CHERRY","cherry"],mm:["BAR","bar"],rm:["BAR","bar"]}}
+    };
+    const blankStats=()=>Object.fromEntries(Object.keys(roles).map(key=>[key,{attempts:0,hits:0,history:[]}]))
+    let state=load(),timer=0,running=false,resultReady=false,startAt=0,totalMs=0,routine=null;
+
+    function load(){try{const saved=JSON.parse(localStorage.getItem(storageKey)||"null"),stats=blankStats();if(!saved)return{target:"weak",stats};Object.keys(roles).forEach(key=>{const row=saved.stats&&saved.stats[key]||{};stats[key]={attempts:Math.max(0,Number(row.attempts)||0),hits:Math.max(0,Number(row.hits)||0),history:Array.isArray(row.history)?row.history.filter(Boolean).slice(0,12):[]}});return{target:roles[saved.target]?saved.target:"weak",stats}}catch{return{target:"weak",stats:blankStats()}}}
+    function save(){try{localStorage.setItem(storageKey,JSON.stringify(state))}catch{toast("端末に保存できませんでした")}}
+    function randomInt(min,max){if(typeof crypto!=="undefined"&&crypto.getRandomValues){const a=new Uint32Array(1);crypto.getRandomValues(a);return min+(a[0]%(max-min+1))}return min+Math.floor(Math.random()*(max-min+1))}
+    function targetButtons(){return Object.entries(roles).map(([key,r])=>`<button class="target${state.target===key?" selected":""}" style="--target-color:${r.color}" data-target="${key}" type="button" aria-pressed="${state.target===key}"><b>${r.label}</b><span>${r.hint}</span><small>${r.odds}</small></button>`).join("")}
+    function reelHTML(r){const headers='<span></span><span class="reel-label">左</span><span class="reel-label">中</span><span class="reel-label">右</span>',rows=[['上段','lu','mu','ru'],['中段','lm','mm','rm'],['下段','ll','ml','rl']];return headers+rows.map(([label,...cells])=>`<span class="row-label">${label}</span>${cells.map(cell=>{const symbol=r.pattern[cell];return`<span class="reel-cell${symbol?" active":""}" style="--active-color:${r.color}" data-cell="${cell}">${symbol?`<span class="reel-symbol ${symbol[1]}">${symbol[0]}</span>`:"·"}</span>`}).join("")}`).join("")}
+    function render(){const r=roles[state.target];$("#targets").innerHTML=targetButtons();$("#reels").innerHTML=reelHTML(r);$("#heroTarget").textContent=r.label;$("#heroTarget").style.color=r.color;$("#heroOdds").textContent=r.odds;$("#patternNote").style.setProperty("--target-color",r.color);$("#patternNote").innerHTML=`<strong>${r.label}</strong>：${r.note}`;$("#recordHit").textContent=`◎ ${r.short}を引けた`;$("#rates").innerHTML=Object.values(roles).map(x=>`<div class="rate"><span>${x.label}</span><b>${x.odds}</b></div>`).join("");renderStats();save()}
+    function renderStats(){const s=state.stats[state.target];$("#attempts").textContent=s.attempts;$("#hits").textContent=s.hits;$("#hitRate").textContent=s.attempts?`${(s.hits/s.attempts*100).toFixed(1)}%`:"—";$("#history").innerHTML=s.history.length?s.history.map(x=>`<span class="${x.hit?"win":""}">${x.hit?"◎":"×"} ${roles[x.target]?roles[x.target].short:"役"}</span>`).join(""):'<span>まだ記録がありません</span>'}
+    function makeRoutine(){const waits=[3200,3700,4300,4800,5400,6100,6800],focus=["左リールBAR",roles[state.target].label,"停止音","呼吸だけ","無心"],breaths=randomInt(1,3),wait=waits[randomInt(0,waits.length-1)];return{breaths,wait,focus:focus[randomInt(0,focus.length-1)]}}
+    function prepare(){routine=makeRoutine();totalMs=routine.wait+3000;$("#routineBreath").textContent=`${routine.breaths}回`;$("#routineWait").textContent=`${(routine.wait/1000).toFixed(1)}秒`;$("#routineFocus").textContent=routine.focus;$("#phaseKicker").textContent=`${roles[state.target].short} / CALIBRATING`;$("#phaseValue").textContent="WAIT";$("#phaseValue").classList.remove("fire");$("#phaseMessage").textContent=`深呼吸${routine.breaths}回。${routine.focus}を意識して待機。`;$("#progressFill").style.width="0%";$("#startButton").textContent="ナビを中止";$("#startButton").classList.add("running");$("#recordHit").disabled=true;$("#recordMiss").disabled=true;resultReady=false;running=true;startAt=performance.now();timer=requestAnimationFrame(tick)}
+    function tick(now){if(!running)return;const elapsed=now-startAt,remaining=Math.max(0,totalMs-elapsed),countdown=Math.ceil(remaining/1000);$("#progressFill").style.width=`${Math.min(100,elapsed/totalMs*100)}%`;if(remaining<=3000){$("#phaseKicker").textContent=`${roles[state.target].short} / COUNTDOWN`;$("#phaseValue").textContent=String(Math.max(1,countdown));$("#phaseMessage").textContent="呼吸を止めず、レバーに手を添える。"}if(remaining<=0){fire();return}timer=requestAnimationFrame(tick)}
+    function fire(){running=false;resultReady=true;cancelAnimationFrame(timer);$("#phaseKicker").textContent=`${roles[state.target].short} / FIRE`;$("#phaseValue").textContent="LEVER ON";$("#phaseValue").classList.add("fire");$("#phaseMessage").textContent="今。実機のナビを優先してレバーON。";$("#progressFill").style.width="100%";$("#startButton").textContent="もう一度ナビ";$("#startButton").classList.remove("running");$("#recordHit").disabled=false;$("#recordMiss").disabled=false;if(navigator.vibrate)navigator.vibrate([80,45,120])}
+    function cancelRun(){running=false;cancelAnimationFrame(timer);$("#phaseKicker").textContent="MISSION LOCKED";$("#phaseValue").textContent="READY";$("#phaseValue").classList.remove("fire");$("#phaseMessage").textContent="姿勢を整えたらナビを開始してください。";$("#progressFill").style.width="0%";$("#startButton").textContent="タイミングナビ開始";$("#startButton").classList.remove("running");$("#recordHit").disabled=true;$("#recordMiss").disabled=true;resultReady=false}
+    function record(hit){if(!resultReady)return;const s=state.stats[state.target],role=roles[state.target];s.attempts++;if(hit)s.hits++;s.history.unshift({target:state.target,hit,time:Date.now()});s.history=s.history.slice(0,12);save();renderStats();resultReady=false;$("#recordHit").disabled=true;$("#recordMiss").disabled=true;$("#phaseKicker").textContent=hit?"SELF REPORT / HIT":"SELF REPORT / MISS";$("#phaseValue").textContent=hit?"NICE":"NEXT";$("#phaseValue").classList.remove("fire");$("#phaseMessage").textContent=hit?`${role.label}を記録しました。`:`結果を記録しました。次の一発へ。`;toast(hit?`${role.label}・的中を保存しました`:"結果を保存しました")}
+    function toast(message){const el=$("#toast");el.textContent=message;el.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove("show"),1700)}
+
+    document.addEventListener("click",e=>{const target=e.target.closest("[data-target]");if(!target)return;if(running||resultReady)cancelRun();state.target=target.dataset.target;render();toast(`${roles[state.target].label}にロック`) });
+    $("#startButton").addEventListener("click",()=>running?cancelRun():prepare());
+    $("#recordHit").addEventListener("click",()=>record(true));
+    $("#recordMiss").addEventListener("click",()=>record(false));
+    $("#resetLog").addEventListener("click",()=>{if(!confirm(`${roles[state.target].label}の記録をリセットしますか？`))return;state.stats[state.target]={attempts:0,hits:0,history:[]};save();renderStats();toast("記録をリセットしました")});
+    render();
+  })();
+  </script>
+</body>
+</html>

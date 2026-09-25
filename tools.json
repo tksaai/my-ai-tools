@@ -1,4 +1,10 @@
 {
+  "lycoreco-occult.html": {
+    "name": "リコリコ 小役オカルトナビ | LYCORIS TRIGGER",
+    "icon": "🎯",
+    "description": "スマスロ リコリス・リコイルの主要小役を指定し、オカルトのレバーONタイミングと停止形を楽しむ非公式ツール。",
+    "category": "スロット"
+  },
   "sao-yozora-zurashi.html": {
     "name": "夜空乱数トレーナー | SAO Alicization",
     "icon": "⚔️",
