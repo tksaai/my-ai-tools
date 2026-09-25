@@ -1,10 +1,4 @@
 {
-  "lycoreco-occult.html": {
-    "name": "リコリコ 小役オカルトナビ | LYCORIS TRIGGER",
-    "icon": "🎯",
-    "description": "スマスロ リコリス・リコイルの主要小役を指定し、オカルトのレバーONタイミングと停止形を楽しむ非公式ツール。",
-    "category": "スロット"
-  },
   "sao-yozora-zurashi.html": {
     "name": "夜空乱数トレーナー | SAO Alicization",
     "icon": "⚔️",
@@ -63,6 +57,12 @@
     "name": "運命乱数ずらし | takt op. Destiny",
     "icon": "🎼",
     "description": "スマスロ takt op.Destiny の乱数ずらしと、報酬CHANCE・報酬JUDGEの3G STを体感できる練習ツール。",
+    "category": "スロット"
+  },
+  "lycoreco-occult.html": {
+    "name": "リコリコ 小役オカルトナビ | LYCORIS TRIGGER",
+    "icon": "🎯",
+    "description": "スマスロ リコリス・リコイルの主要小役を指定し、オカルトのレバーONタイミングと停止形を楽しむ非公式ツール。",
     "category": "スロット"
   },
   "takuate.html": {
