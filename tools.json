@@ -1,10 +1,4 @@
 {
-  "onigakari2-zurashi.html": {
-    "name": "鬼がかり乱数トレーナー2 | e Re:ゼロ",
-    "icon": "👹",
-    "description": "e Re:ゼロから始める異世界生活 鬼がかり2の確率・振り分けに合わせた乱数ずらしとRUSH体感ツール。",
-    "category": "パチンコ"
-  },
   "sao-yozora-zurashi.html": {
     "name": "夜空乱数トレーナー | SAO Alicization",
     "icon": "⚔️",
@@ -16,6 +10,12 @@
     "icon": "📱",
     "description": "生成AIで作成したツールです。",
     "category": "アプリ"
+  },
+  "onigakari2-zurashi.html": {
+    "name": "鬼がかり乱数トレーナー2 | e Re:ゼロ",
+    "icon": "👹",
+    "description": "e Re:ゼロから始める異世界生活 鬼がかり2の確率・振り分けに合わせた乱数ずらしとRUSH体感ツール。",
+    "category": "パチンコ"
   },
   "sao2-bullet-occult.html": {
     "name": "SAO2 バレット目オカルトナビ",
