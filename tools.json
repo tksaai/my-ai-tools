@@ -1,4 +1,10 @@
 {
+  "isekaru-setting.html": {
+    "name": "いせかる設定推測ノート | 異世界かるてっと",
+    "icon": "🏫",
+    "description": "スマスロ 異世界かるてっとの設定1・2・5・6を実戦値から比較し、いせかる目の成立ゲーム数も台ごとに記録できる設定推測ツール。",
+    "category": "スロット"
+  },
   "sao-yozora-zurashi.html": {
     "name": "夜空乱数トレーナー | SAO Alicization",
     "icon": "⚔️",
