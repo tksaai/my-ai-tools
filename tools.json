@@ -1,9 +1,45 @@
 {
+  "hamari.html": {
+    "name": "hamari",
+    "icon": "📱",
+    "description": "生成AIで作成したツールです。",
+    "category": "アプリ"
+  },
+  "takuate.html": {
+    "name": "スロット2択 オカルトナビゲーター",
+    "icon": "📱",
+    "description": "生成AIで作成したツールです。",
+    "category": "アプリ"
+  },
+  "kanokari-zurashi.html": {
+    "name": "恋カノ乱数トレーナー | 彼女、お借りします",
+    "icon": "📱",
+    "description": "生成AIで作成したツールです。",
+    "category": "アプリ"
+  },
+  "lycoreco-occult.html": {
+    "name": "リコリコ 小役オカルトナビ | LYCORIS TRIGGER",
+    "icon": "🎯",
+    "description": "スマスロ リコリス・リコイルの主要小役を指定し、オカルトのレバーONタイミングと停止形を楽しむ非公式ツール。",
+    "category": "スロット"
+  },
+  "subscManeger.html": {
+    "name": "My Subsc Manager",
+    "icon": "📱",
+    "description": "生成AIで作成したツールです。",
+    "category": "アプリ"
+  },
   "isekaru-setting.html": {
     "name": "いせかる設定推測ノート | 異世界かるてっと",
     "icon": "🏫",
-    "description": "スマスロ 異世界かるてっとの設定1・2・5・6を実戦値から比較し、いせかる目の成立ゲーム数も台ごとに記録できる設定推測ツール。",
+    "description": "スマスロ A-SLOT+ 異世界かるてっと BTの実戦値と設定示唆から設定1・2・5・6の相対期待度を計算し、いせかる目の成立ゲーム数も記録できる設定推測ツール。",
     "category": "スロット"
+  },
+  "isekaru.html": {
+    "name": "異世界乱数ずらし",
+    "icon": "📱",
+    "description": "生成AIで作成したツールです。",
+    "category": "アプリ"
   },
   "sao-yozora-zurashi.html": {
     "name": "夜空乱数トレーナー | SAO Alicization",
@@ -11,11 +47,23 @@
     "description": "e ソードアート・オンライン アリシゼーション 夜空の大当り確率に合わせた乱数ずらしとRUSH体感ツール。",
     "category": "パチンコ"
   },
-  "game.html": {
-    "name": "10-in-1 Web Arcade",
+  "tact.html": {
+    "name": "小役リズムジャッジ | Occult Tact Trainer",
     "icon": "📱",
-    "description": "生成AIで作成したツールです。",
+    "description": "スマスロ takt op. 風の小役オカルト体感トレーナー。子役確率を編集してリズム判定と期待値確認ができます。",
     "category": "アプリ"
+  },
+  "tact-zurashi.html": {
+    "name": "運命乱数ずらし | takt op. Destiny",
+    "icon": "🎼",
+    "description": "スマスロ takt op.Destiny の乱数ずらしと、報酬CHANCE・報酬JUDGEの3G STを体感できる練習ツール。",
+    "category": "スロット"
+  },
+  "sao2-setting.html": {
+    "name": "SAO2 設定判別 | GGO ANALYZER",
+    "icon": "🎯",
+    "description": "スマスロ ソードアート・オンラインIIの解析値を使い、実戦データから設定1～6の相対期待度を計算する設定判別ツール。",
+    "category": "スロット"
   },
   "onigakari2-zurashi.html": {
     "name": "鬼がかり乱数トレーナー2 | e Re:ゼロ",
@@ -29,56 +77,8 @@
     "description": "スマスロ ソードアート・オンラインIIのバレット目A～Eや緑7・BAR図柄を指定し、オカルトのレバーONタイミングを楽しむ非公式ツール。",
     "category": "スロット"
   },
-  "subscManeger.html": {
-    "name": "My Subsc Manager",
-    "icon": "📱",
-    "description": "生成AIで作成したツールです。",
-    "category": "アプリ"
-  },
-  "tact.html": {
-    "name": "小役リズムジャッジ | Occult Tact Trainer",
-    "icon": "📱",
-    "description": "スマスロ takt op. 風の小役オカルト体感トレーナー。子役確率を編集してリズム判定と期待値確認ができます。",
-    "category": "アプリ"
-  },
-  "sao2-setting.html": {
-    "name": "SAO2 設定判別 | GGO ANALYZER",
-    "icon": "🎯",
-    "description": "スマスロ ソードアート・オンラインIIの解析値を使い、実戦データから設定1～6の相対期待度を計算する設定判別ツール。",
-    "category": "スロット"
-  },
-  "hamari.html": {
-    "name": "hamari",
-    "icon": "📱",
-    "description": "生成AIで作成したツールです。",
-    "category": "アプリ"
-  },
-  "kanokari-zurashi.html": {
-    "name": "恋カノ乱数トレーナー | 彼女、お借りします",
-    "icon": "📱",
-    "description": "生成AIで作成したツールです。",
-    "category": "アプリ"
-  },
-  "isekaru.html": {
-    "name": "異世界乱数ずらし",
-    "icon": "📱",
-    "description": "生成AIで作成したツールです。",
-    "category": "アプリ"
-  },
-  "tact-zurashi.html": {
-    "name": "運命乱数ずらし | takt op. Destiny",
-    "icon": "🎼",
-    "description": "スマスロ takt op.Destiny の乱数ずらしと、報酬CHANCE・報酬JUDGEの3G STを体感できる練習ツール。",
-    "category": "スロット"
-  },
-  "lycoreco-occult.html": {
-    "name": "リコリコ 小役オカルトナビ | LYCORIS TRIGGER",
-    "icon": "🎯",
-    "description": "スマスロ リコリス・リコイルの主要小役を指定し、オカルトのレバーONタイミングと停止形を楽しむ非公式ツール。",
-    "category": "スロット"
-  },
-  "takuate.html": {
-    "name": "スロット2択 オカルトナビゲーター",
+  "game.html": {
+    "name": "10-in-1 Web Arcade",
     "icon": "📱",
     "description": "生成AIで作成したツールです。",
     "category": "アプリ"
